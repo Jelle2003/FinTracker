@@ -25,14 +25,21 @@ with app.app_context():
     db.create_all()
 
 
-
+CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Health']
 
 @app.route("/")
 def index():
 
     expenses =  Expense.query.order_by(Expense.date.desc(), Expense.id.desc()).all()
-    print(expenses)
-    return render_template("index.html", expenses=expenses)
+    total = round(sum(e.amount for e in expenses), 2)
+
+    
+    return render_template(
+        "index.html", 
+        expenses=expenses,
+        categories=CATEGORIES,
+        total=total 
+        )
 
 @app.route("/add", methods=['POST'])
 def add():
@@ -68,8 +75,14 @@ def add():
     flash("Expense added", "success")
     return redirect(url_for("index"))
 
-    print("Form received:", dict(request.form))
-    return make_response("Form received check the console")
+@app.route('/delete/<int:expense_id>', methods=['POST'])
+def delete(expense_id):
+    e = Expense.query.get_or_404(expense_id)
+    db.session.delete(e)
+    db.session.commit()
+    flash("Expense deleted", "success")
+    return redirect(url_for("index"))
+
 
 
 
