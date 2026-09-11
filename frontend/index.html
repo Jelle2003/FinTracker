@@ -240,6 +240,8 @@
       <script>
         const catLabels = {{(cat_labels or []) | tojson}};
         const catValues = {{(cat_values or []) | tojson}};
+        const dayLabels = {{(day_labels or []) | tojson}};
+        const dayValues = {{(day_values or []) | tojson}};
 
         if (document.getElementById('catChart')) {
           const catCtx = document.getElementById('catChart').getContext('2d')
@@ -248,6 +250,34 @@
             type: 'pie',
             data: {labels: catLabels, datasets: [{data: catValues}]},
             options: {plugins: {legend: {labels: {color: '#cbd5e1'}}}}
+          })
+        }
+
+        if (document.getElementById('dayChart')) {
+          const dayCtx = document.getElementById('dayChart').getContext('2d')
+
+          new Chart(dayCtx, {
+            type: 'bar',
+            data: {
+              labels: dayLabels, datasets: [{
+                label: 'Total',
+                data: dayValues
+              }]
+            },
+            options: {
+              plugins: {
+                legend: {
+                  labels: {
+                    color: '#334155'
+                  }
+                }
+              },
+
+              scales: {
+                x: { ticks: {color: '#cbd5e1'}, grid: {color: '#334155'}},
+                y: { ticks: {color: '#cbd5e1'}, grid: {color: '#334155'}}
+              }
+            }
           })
         }
       </script>
