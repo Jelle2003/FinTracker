@@ -71,6 +71,7 @@ def index():
     total = round(sum(e.amount for e in expenses), 2)
 
 
+    # Pie Chart
     cat_q = db.session.query(Expense.category, func.sum(Expense.amount))
 
     if start_date:
