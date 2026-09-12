@@ -5,3 +5,7 @@ __pycache__/
 instance/*.db
 
 .env
+
+create_user.py
+set_password.py
+*.backup

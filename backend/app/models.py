@@ -1,7 +1,9 @@
+from datetime import date
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .app import db
+from .database import db
 
 
 class User(UserMixin, db.Model):
@@ -14,3 +16,11 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(120), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=date.today)
