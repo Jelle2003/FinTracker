@@ -254,3 +254,12 @@ footer{
 @media(prefers-reduced-motion:reduce){
   *{scroll-behavior:auto !important;transition:none !important}
 }
+
+/* Dashboard charts */
+.chart-wrap{position:relative;width:100%;}
+.chart-wrap-main{height:320px;}
+.chart-wrap-category{height:300px;}
+@media(max-width:760px){
+  .chart-wrap-main{height:260px;}
+  .chart-wrap-category{height:260px;}
+}
