@@ -1,0 +1,1 @@
+Dit is een app waarmee je je financiën in kaart kunt brengen
