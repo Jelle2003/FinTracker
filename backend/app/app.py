@@ -14,7 +14,9 @@ from .models import User, Expense, Income, Investment
 
 app = Flask(
     __name__,
-    template_folder="../../frontend"
+    template_folder="../../frontend",
+    static_folder="../../frontend/css",
+    static_url_path="/css"
 )
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///expenses.db"
