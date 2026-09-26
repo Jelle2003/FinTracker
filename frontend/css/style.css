@@ -456,3 +456,50 @@ footer{
 @media(prefers-reduced-motion:reduce){
   .login-input-wrap input,.login-submit{transition:none}
 }
+
+
+/* Investment search / autocomplete */
+.investing-eyebrow{margin:0 0 6px;color:#38bdf8;font-size:.67rem;font-weight:800;letter-spacing:.13em}
+.investment-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border-bottom:1px solid var(--border)}
+.investment-section-head p{margin:3px 0 0;color:#64748b;font-size:.75rem}
+.investment-live-pill{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid rgba(52,211,153,.22);background:rgba(52,211,153,.06);color:#6ee7b7;border-radius:999px;padding:5px 9px;font-size:.67rem;font-weight:650}
+.investment-live-pill i{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.08)}
+.investment-add-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.investment-step{color:#64748b;font-size:.68rem;padding-top:6px}
+.investment-search-wrap{position:relative;margin-top:6px}
+.investment-search-wrap input{width:100%;height:48px;padding:0 14px 0 40px!important;border-radius:13px!important}
+.investment-search-wrap input.is-selected{border-color:rgba(52,211,153,.5)!important;box-shadow:0 0 0 3px rgba(52,211,153,.07)!important}
+.investment-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-52%);color:#64748b;font-size:1.15rem;z-index:2;pointer-events:none}
+.investment-help{margin:7px 0 0;color:#64748b;font-size:.68rem}
+.investment-results{position:absolute;z-index:30;width:calc(100% - 32px);margin-top:5px;border:1px solid #30445f;border-radius:13px;background:#0e1827;box-shadow:0 18px 45px rgba(0,0,0,.35);overflow:hidden}
+.investment-search-field{position:relative}
+.investment-result{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:10px 11px!important;border:0!important;border-bottom:1px solid #1f3044!important;border-radius:0!important;background:transparent!important;color:#e2e8f0!important}
+.investment-result:last-child{border-bottom:0!important}
+.investment-result:hover,.investment-result:focus{background:#17283d!important;transform:none;outline:none}
+.investment-result-icon,.selected-icon{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:#172d43;color:#7dd3fc;font-weight:800;font-size:.78rem}
+.investment-result-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.investment-result-copy strong{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.investment-result-copy small{color:#64748b;font-size:.66rem}
+.investment-result-arrow{margin-left:auto;color:#38bdf8}
+.investment-no-results{padding:14px;color:#94a3b8;font-size:.76rem}
+.selected-investment{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px;border:1px solid rgba(52,211,153,.18);border-radius:12px;background:rgba(52,211,153,.045)}
+.selected-investment>div:nth-child(2){min-width:0;display:flex;flex-direction:column}
+.selected-investment strong{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selected-investment span{color:#6b7d91;font-size:.67rem}
+.selected-investment>button{margin-left:auto;width:28px;height:28px;border:0!important;background:transparent!important;color:#94a3b8;font-size:1.2rem}
+.investment-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.investment-submit{margin-top:4px!important;border:1px solid rgba(56,189,248,.3)!important;background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(14,165,233,.10))!important;color:#7dd3fc!important;font-weight:750;transition:.18s ease}
+.investment-submit:not(:disabled):hover{background:linear-gradient(135deg,rgba(56,189,248,.28),rgba(14,165,233,.18))!important}
+.investment-submit:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.investment-note{display:flex;gap:8px;margin-top:15px;padding:11px;border:1px solid #1f3044;border-radius:11px;background:#0c1522;color:#64748b;font-size:.67rem;line-height:1.45}
+.investment-note strong{color:#94a3b8;white-space:nowrap}
+.empty-portfolio{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px}
+.empty-portfolio span{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#17283d;color:#38bdf8;font-size:1.2rem}
+.empty-portfolio strong{font-size:.82rem;color:#cbd5e1}
+.empty-portfolio small{color:#64748b}
+@media(max-width:760px){
+ .investment-section-head{align-items:flex-start;flex-direction:column}
+ .investment-live-pill{font-size:.62rem}
+ .investment-form-grid{grid-template-columns:1fr}
+ .investment-results{width:calc(100% - 28px)}
+}
