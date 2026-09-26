@@ -1,13 +1,131 @@
 <!DOCTYPE html>
-<html lang="nl" class="h-full"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Beleggen · FINTRACK</title><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<html lang="nl" class="h-full">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beleggen · FINTRACK</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="h-full bg-slate-900 text-slate-100"><main class="mx-auto max-w-6xl px-4 py-8">
-<header class="site-header"><div class="site-nav"><a href="{{url_for('index')}}" class="brand-mark"><span>FIN</span>TRACK</a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><nav id="primary-nav" class="primary-nav"><a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div><a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a class="nav-logout" href="{{url_for('logout')}}">Afmelden</a></nav></div></header>
-{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="mb-3 rounded-xl border border-slate-700 p-3">{{message}}</div>{% endfor %}{% endwith %}
-<div class="investing-intro"><h1 class="text-3xl font-semibold">Beleggen</h1><p class="mt-1 mb-6 text-slate-400">Volg je ingelegde bedrag, actuele waarde en portefeuille op één plek. Koersen zijn indicatief en kunnen ontbreken of vertraagd zijn.</p></div>
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6"><div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Totaal ingelegd</p><p class="mt-2 text-2xl font-semibold">€{{"%.2f"|format(total_cost)}}</p></div><div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Geschatte marktwaarde</p><p class="mt-2 text-2xl font-semibold">€{{"%.2f"|format(total_value)}}</p></div><div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Ongerealiseerd resultaat</p><p class="mt-2 text-2xl font-semibold {% if gain is not none and gain >= 0 %}text-emerald-300{% elif gain is not none %}text-rose-300{% endif %}">{% if gain is not none %}€{{"%.2f"|format(gain)}}{% else %}—{% endif %}</p></div></div>
-<div class="grid grid-cols-1 gap-4 lg:grid-cols-3"><section class="lg:col-span-2 overflow-x-auto rounded-2xl border border-slate-800"><h2 class="border-b border-slate-800 px-4 py-3 text-lg font-semibold">Mijn portefeuille</h2><div class="portfolio-table-wrap"><p class="portfolio-scroll-hint">Op smalle schermen: veeg horizontaal om alle kolommen te bekijken.</p><table class="min-w-full text-sm"><thead class="bg-slate-800/50 text-left"><tr><th class="p-3">Belegging</th><th class="p-3">Type</th><th class="p-3 text-right">Aantal</th><th class="p-3 text-right">Aankoopprijs</th><th class="p-3 text-right">Koers</th><th class="p-3 text-right">Waarde</th><th></th></tr></thead><tbody>{% for r in rows %}<tr class="border-t border-slate-800"><td class="p-3"><strong>{{r.holding.symbol}}</strong><br><span class="text-xs text-slate-500">{{r.holding.name}}</span></td><td class="p-3">{{r.holding.asset_type}}</td><td class="p-3 text-right">{{r.holding.quantity}}</td><td class="p-3 text-right">€{{"%.2f"|format(r.holding.average_price)}}</td><td class="p-3 text-right">{% if r.current_price is not none %}{{"%.2f"|format(r.current_price)}} {{r.currency}}{% else %}—{% endif %}</td><td class="p-3 text-right">{% if r.value is not none %}€{{"%.2f"|format(r.value)}}{% else %}—{% endif %}</td><td class="p-3"><form method="post" action="{{url_for('delete_investment',investment_id=r.holding.id)}}"><button class="text-rose-300 text-xs">Verwijder</button></form></td></tr>{% else %}<tr><td colspan="7" class="p-6 text-center text-slate-400">Nog geen beleggingen toegevoegd.</td></tr>{% endfor %}</tbody></table></div></section>
-<section class="rounded-2xl border border-slate-800 p-4"><h2 class="mb-3 text-lg font-semibold">Belegging toevoegen</h2><form method="post" action="{{url_for('add_investment')}}" class="space-y-3"><label class="block text-sm">Ticker / symbool<input name="symbol" placeholder="VWCE.DE of AAPL" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2"></label><label class="block text-sm">Naam<input name="name" placeholder="MSCI World ETF" class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2"></label><label class="block text-sm">Type<select name="asset_type" class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2"><option>ETF</option><option>Aandeel</option><option>Crypto</option><option>Obligatie</option><option>Andere</option></select></label><label class="block text-sm">Aantal<input name="quantity" type="number" step="0.000001" min="0" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2"></label><label class="block text-sm">Gemiddelde aankoopprijs<input name="average_price" type="number" step="0.01" min="0" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2"></label><button class="w-full rounded-xl bg-brand/10 border border-brand/30 px-4 py-2 text-brand">Toevoegen</button></form></section></div>
-</main><script>
-(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
-</script></body></html>
+<body class="h-full bg-slate-900 text-slate-100">
+<main class="mx-auto max-w-6xl px-4 py-8">
+<header class="site-header"><div class="site-nav">
+<a href="{{url_for('index')}}" class="brand-mark"><span>FIN</span>TRACK</a>
+<button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button>
+<nav id="primary-nav" class="primary-nav">
+<a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div>
+<a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a class="nav-logout" href="{{url_for('logout')}}">Afmelden</a>
+</nav></div></header>
+
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}
+<div class="mb-3 rounded-xl border border-slate-700 p-3">{{message}}</div>
+{% endfor %}{% endwith %}
+
+<div class="investing-intro">
+<p class="investing-eyebrow">PORTFOLIO</p>
+<h1 class="text-3xl font-semibold">Beleggen</h1>
+<p class="mt-1 text-slate-400">Volg je ingelegde bedrag, actuele waarde en portefeuille op één plek.</p>
+</div>
+
+<div class="investment-metrics grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+<div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Totaal ingelegd</p><p class="mt-2 text-2xl font-semibold">€{{"%.2f"|format(total_cost)}}</p></div>
+<div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Geschatte marktwaarde</p><p class="mt-2 text-2xl font-semibold">€{{"%.2f"|format(total_value)}}</p></div>
+<div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Ongerealiseerd resultaat</p><p class="mt-2 text-2xl font-semibold {% if gain is not none and gain >= 0 %}text-emerald-300{% elif gain is not none %}text-rose-300{% endif %}">{% if gain is not none %}€{{"%.2f"|format(gain)}}{% else %}—{% endif %}</p></div>
+</div>
+
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+<section class="lg:col-span-2 overflow-x-auto rounded-2xl border border-slate-800">
+<div class="investment-section-head"><div><h2 class="text-lg font-semibold">Mijn portefeuille</h2><p>Je huidige posities en indicatieve koersen.</p></div><span class="investment-live-pill"><i></i> Koersen live opgehaald</span></div>
+<div class="portfolio-table-wrap">
+<p class="portfolio-scroll-hint">Op smalle schermen: veeg horizontaal om alle kolommen te bekijken.</p>
+<table class="min-w-full text-sm"><thead class="bg-slate-800/50 text-left"><tr><th class="p-3">Belegging</th><th class="p-3">Type</th><th class="p-3 text-right">Aantal</th><th class="p-3 text-right">Aankoopprijs</th><th class="p-3 text-right">Koers</th><th class="p-3 text-right">Waarde</th><th></th></tr></thead>
+<tbody>{% for r in rows %}<tr class="border-t border-slate-800">
+<td class="p-3"><strong>{{r.holding.symbol}}</strong><br><span class="text-xs text-slate-500">{{r.holding.name}}</span></td><td class="p-3">{{r.holding.asset_type}}</td><td class="p-3 text-right">{{r.holding.quantity}}</td><td class="p-3 text-right">€{{"%.2f"|format(r.holding.average_price)}}</td><td class="p-3 text-right">{% if r.current_price is not none %}{{"%.2f"|format(r.current_price)}} {{r.currency}}{% else %}—{% endif %}</td><td class="p-3 text-right">{% if r.value is not none %}€{{"%.2f"|format(r.value)}}{% else %}—{% endif %}</td>
+<td class="p-3"><form method="post" action="{{url_for('delete_investment',investment_id=r.holding.id)}}"><button class="text-rose-300 text-xs">Verwijder</button></form></td></tr>
+{% else %}<tr><td colspan="7" class="p-6 text-center text-slate-400"><div class="empty-portfolio"><span>＋</span><strong>Je portefeuille is nog leeg</strong><small>Voeg hierboven je eerste aandeel, ETF of crypto toe.</small></div></td></tr>{% endfor %}</tbody></table>
+</div></section>
+
+<section class="rounded-2xl border border-slate-800 p-4 investment-add-card">
+<div class="investment-add-heading"><div><p class="investing-eyebrow">NIEUWE POSITIE</p><h2 class="text-lg font-semibold">Belegging toevoegen</h2></div><span class="investment-step">1 → 2 → 3</span></div>
+<form method="post" action="{{url_for('add_investment')}}" class="space-y-3" id="investment-form" autocomplete="off">
+<div class="investment-search-field">
+<label class="block text-sm" for="investment-search">Zoek je belegging</label>
+<div class="investment-search-wrap"><span class="investment-search-icon">⌕</span><input id="investment-search" type="text" placeholder="Bijv. Apple, VWCE of Bitcoin" spellcheck="false" aria-autocomplete="list" aria-controls="investment-results" aria-expanded="false"></div>
+<div id="investment-results" class="investment-results" role="listbox" hidden></div>
+<p class="investment-help">Kies een resultaat uit de lijst. Zo vermijd je tikfouten in de ticker.</p>
+</div>
+<div id="selected-investment" class="selected-investment" hidden><div class="selected-icon" id="selected-icon">A</div><div><strong id="selected-name"></strong><span id="selected-meta"></span></div><button type="button" id="clear-selection" aria-label="Selectie wissen">×</button></div>
+<input type="hidden" name="symbol" id="investment-symbol" required>
+<input type="hidden" name="name" id="investment-name" required>
+<input type="hidden" name="asset_type" id="investment-type" value="Andere">
+
+<div class="investment-form-grid">
+<label class="block text-sm">Aantal<input name="quantity" type="number" step="0.000001" min="0.000001" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2" placeholder="Bijv. 3"></label>
+<label class="block text-sm">Aankoopprijs per stuk<input name="average_price" type="number" step="0.01" min="0" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2" placeholder="Bijv. 150"></label>
+</div>
+<button id="investment-submit" disabled class="investment-submit w-full rounded-xl px-4 py-2">Belegging toevoegen <span>→</span></button>
+</form>
+<div class="investment-note"><strong>💡 Tip</strong><span>De aankoopprijs is wat jij gemiddeld per stuk hebt betaald. FINTRACK haalt de actuele indicatieve koers automatisch op.</span></div>
+</section>
+</div>
+</main>
+<script>
+(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(toggle&&nav){toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});}})();
+
+(()=> {
+ const input=document.getElementById("investment-search"), results=document.getElementById("investment-results");
+ const form=document.getElementById("investment-form"), submit=document.getElementById("investment-submit");
+ const selected=document.getElementById("selected-investment"), symbol=document.getElementById("investment-symbol"), name=document.getElementById("investment-name"), type=document.getElementById("investment-type");
+ const selectedName=document.getElementById("selected-name"), selectedMeta=document.getElementById("selected-meta"), icon=document.getElementById("selected-icon"), clear=document.getElementById("clear-selection");
+ let timer=null, controller=null, activeResults=[];
+ function setResults(items){
+   activeResults=items; results.innerHTML="";
+   if(!items.length){results.innerHTML='<div class="investment-no-results">Geen beleggingen gevonden. Probeer de naam of ticker opnieuw.</div>';results.hidden=false;input.setAttribute("aria-expanded","true");return;}
+   items.forEach((item,index)=>{
+     const button=document.createElement("button"); button.type="button"; button.className="investment-result"; button.setAttribute("role","option");
+     button.dataset.index=index;
+     button.innerHTML='<span class="investment-result-icon">'+(item.symbol[0]||"•")+'</span><span class="investment-result-copy"><strong></strong><small></small></span><span class="investment-result-arrow">→</span>';
+     button.querySelector("strong").textContent=item.symbol+" · "+item.name;
+     button.querySelector("small").textContent=[item.asset_type,item.exchange].filter(Boolean).join(" · ");
+     button.addEventListener("click",()=>selectItem(item)); results.appendChild(button);
+   });
+   results.hidden=false; input.setAttribute("aria-expanded","true");
+ }
+ function selectItem(item){
+   symbol.value=item.symbol; name.value=item.name; type.value=item.asset_type||"Andere";
+   input.value=item.symbol+" · "+item.name;
+   selectedName.textContent=item.name;
+   selectedMeta.textContent=[item.symbol,item.asset_type,item.exchange].filter(Boolean).join(" · ");
+   icon.textContent=(item.symbol||"A").slice(0,1);
+   selected.hidden=false; results.hidden=true; input.setAttribute("aria-expanded","false");
+   submit.disabled=false; input.classList.add("is-selected");
+ }
+ function clearSelection(){
+   symbol.value=""; name.value=""; type.value="Andere"; input.value="";
+   selected.hidden=true; results.hidden=true; submit.disabled=true; input.classList.remove("is-selected"); input.focus();
+ }
+ clear.addEventListener("click",clearSelection);
+ input.addEventListener("input",()=>{
+   const q=input.value.trim();
+   symbol.value=""; name.value=""; submit.disabled=true; selected.hidden=true; input.classList.remove("is-selected");
+   clearTimeout(timer); if(controller)controller.abort();
+   if(q.length<2){results.hidden=true;input.setAttribute("aria-expanded","false");return;}
+   timer=setTimeout(async()=>{
+     try{
+       controller=new AbortController();
+       const response=await fetch("/api/investing/search?q="+encodeURIComponent(q),{signal:controller.signal,headers:{"Accept":"application/json"}});
+       if(!response.ok)throw new Error("search");
+       const data=await response.json(); setResults(data.results||[]);
+     }catch(error){if(error.name!=="AbortError"){results.innerHTML='<div class="investment-no-results">Zoeken lukt momenteel niet. Controleer je verbinding en probeer opnieuw.</div>';results.hidden=false;}}
+   },220);
+ });
+ input.addEventListener("keydown",e=>{
+   if(e.key==="Escape"){results.hidden=true;input.setAttribute("aria-expanded","false");}
+   if(e.key==="Enter" && !results.hidden && activeResults.length){e.preventDefault();selectItem(activeResults[0]);}
+ });
+ document.addEventListener("click",e=>{if(!e.target.closest(".investment-search-field")){results.hidden=true;input.setAttribute("aria-expanded","false");}});
+ form.addEventListener("submit",e=>{if(!symbol.value){e.preventDefault();input.focus();}});
+})();
+</script>
+</body></html>
