@@ -71,7 +71,7 @@ def parse_date_or_none(s: str):
 def login():
 
     if current_user.is_authenticated:
-        return redirect(url_for("index"))
+        return redirect(url_for("expenses"))
 
     if request.method == "POST":
 
@@ -120,127 +120,70 @@ def logout():
 @app.route("/")
 @login_required
 def index():
+    year_str = (request.args.get("year") or str(date.today().year)).strip()
+    try:
+        selected_year = int(year_str)
+        if selected_year < 1900 or selected_year > 2100:
+            raise ValueError
+    except ValueError:
+        selected_year = date.today().year
 
-    start_str = (request.args.get("start") or "").strip()
-    end_str = (request.args.get("end") or "").strip()
-    selected_category = (request.args.get("category") or "").strip()
+    year_start = date(selected_year, 1, 1)
+    year_end = date(selected_year, 12, 31)
 
-    start_date = parse_date_or_none(start_str)
-    end_date = parse_date_or_none(end_str)
+    expense_total = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.date >= year_start, Expense.date <= year_end
+    ).scalar() or 0
 
-    if start_date and end_date and end_date < start_date:
-        flash("End date cannot be before start date", "error")
+    income_total = db.session.query(func.sum(Income.amount)).filter(
+        Income.start_date >= year_start, Income.start_date <= year_end
+    ).scalar() or 0
 
-        start_date = None
-        end_date = None
+    monthly_income = dict(db.session.query(
+        func.strftime("%m", Income.start_date), func.sum(Income.amount)
+    ).filter(
+        Income.start_date >= year_start, Income.start_date <= year_end
+    ).group_by(func.strftime("%m", Income.start_date)).all())
 
-        start_str = ""
-        end_str = ""
+    monthly_expenses = dict(db.session.query(
+        func.strftime("%m", Expense.date), func.sum(Expense.amount)
+    ).filter(
+        Expense.date >= year_start, Expense.date <= year_end
+    ).group_by(func.strftime("%m", Expense.date)).all())
 
-    q = Expense.query
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    income_values = [round(float(monthly_income.get(f"{m:02d}", 0) or 0), 2) for m in range(1, 13)]
+    expense_values = [round(float(monthly_expenses.get(f"{m:02d}", 0) or 0), 2) for m in range(1, 13)]
 
-    if start_date:
-        q = q.filter(Expense.date >= start_date)
+    category_rows = db.session.query(
+        Expense.category, func.sum(Expense.amount)
+    ).filter(
+        Expense.date >= year_start, Expense.date <= year_end
+    ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).all()
 
-    if end_date:
-        q = q.filter(Expense.date <= end_date)
+    recent_expenses = Expense.query.order_by(Expense.date.desc(), Expense.id.desc()).limit(5).all()
+    recent_incomes = Income.query.order_by(Income.start_date.desc(), Income.id.desc()).limit(5).all()
 
-    if selected_category:
-        q = q.filter(Expense.category == selected_category)
+    income_total = round(float(income_total), 2)
+    expense_total = round(float(expense_total), 2)
+    balance = round(income_total - expense_total, 2)
+    savings_rate = round((balance / income_total) * 100, 1) if income_total else 0
 
-    expenses = q.order_by(
-        Expense.date.desc(),
-        Expense.id.desc()
-    ).all()
-
-    total = round(
-        sum(e.amount for e in expenses),
-        2
-    )
-
-    # ========================================================
-    # PIE CHART
-    # ========================================================
-
-    cat_q = db.session.query(
-        Expense.category,
-        func.sum(Expense.amount)
-    )
-
-    if start_date:
-        cat_q = cat_q.filter(Expense.date >= start_date)
-
-    if end_date:
-        cat_q = cat_q.filter(Expense.date <= end_date)
-
-    if selected_category:
-        cat_q = cat_q.filter(
-            Expense.category == selected_category
-        )
-
-    cat_rows = cat_q.group_by(
-        Expense.category
-    ).all()
-
-    cat_labels = [
-        category
-        for category, _ in cat_rows
-    ]
-
-    cat_values = [
-        round(float(amount or 0), 2)
-        for _, amount in cat_rows
-    ]
-
-    # ========================================================
-    # DAY CHART
-    # ========================================================
-
-    day_q = db.session.query(
-        Expense.date,
-        func.sum(Expense.amount)
-    )
-
-    if start_date:
-        day_q = day_q.filter(Expense.date >= start_date)
-
-    if end_date:
-        day_q = day_q.filter(Expense.date <= end_date)
-
-    if selected_category:
-        day_q = day_q.filter(
-            Expense.category == selected_category
-        )
-
-    day_rows = day_q.group_by(
-        Expense.date
-    ).order_by(
-        Expense.date
-    ).all()
-
-    day_labels = [
-        day.isoformat()
-        for day, _ in day_rows
-    ]
-
-    day_values = [
-        round(float(amount or 0), 2)
-        for _, amount in day_rows
-    ]
+    years = {date.today().year}
+    years.update(y for (y,) in db.session.query(func.strftime("%Y", Expense.date)).distinct().all() if y)
+    years.update(y for (y,) in db.session.query(func.strftime("%Y", Income.start_date)).distinct().all() if y)
+    years = sorted({int(y) for y in years} | {selected_year}, reverse=True)
 
     return render_template(
-        "index.html",
-        categories=CATEGORIES,
-        today=date.today().isoformat(),
-        expenses=expenses,
-        total=total,
-        start_str=start_str,
-        end_str=end_str,
-        selected_category=selected_category,
-        cat_labels=cat_labels,
-        cat_values=cat_values,
-        day_labels=day_labels,
-        day_values=day_values
+        "index.html", selected_year=selected_year, years=years,
+        income_total=income_total, expense_total=expense_total,
+        balance=balance, savings_rate=savings_rate,
+        month_names=month_names, income_values=income_values,
+        expense_values=expense_values,
+        category_labels=[c for c, _ in category_rows],
+        category_values=[round(float(v or 0), 2) for _, v in category_rows],
+        recent_expenses=recent_expenses, recent_incomes=recent_incomes
     )
 
 
@@ -248,7 +191,7 @@ def index():
 # ADD EXPENSE
 # ============================================================
 
-@app.route("/add", methods=["POST"])
+@app.route("/expenses/add", methods=["POST"])
 @login_required
 def add():
 
@@ -322,7 +265,7 @@ def add():
 # DELETE EXPENSE
 # ============================================================
 
-@app.route("/delete/<int:expense_id>", methods=["POST"])
+@app.route("/expenses/delete/<int:expense_id>", methods=["POST"])
 @login_required
 def delete(expense_id):
 
@@ -340,7 +283,7 @@ def delete(expense_id):
 # EDIT EXPENSE
 # ============================================================
 
-@app.route("/edit/<int:expense_id>", methods=["GET"])
+@app.route("/expenses/edit/<int:expense_id>", methods=["GET"])
 @login_required
 def edit(expense_id):
 
@@ -354,7 +297,7 @@ def edit(expense_id):
     )
 
 
-@app.route("/edit/<int:expense_id>", methods=["POST"])
+@app.route("/expenses/edit/<int:expense_id>", methods=["POST"])
 @login_required
 def edit_post(expense_id):
 
