@@ -4,7 +4,7 @@ from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 from .database import db
-from .models import User, Expense
+from .models import User, Expense, Income
 
 
 app = Flask(
@@ -43,6 +43,13 @@ CATEGORIES = [
     "Rent",
     "Utilities",
     "Health"
+]
+
+INCOME_CATEGORIES = [
+    "Salary",
+    "DJ income",
+    "Refund",
+    "Other"
 ]
 
 
@@ -425,6 +432,160 @@ def edit_post(expense_id):
 
     return redirect(url_for("index"))
 
+
+
+# ============================================================
+# INCOME
+# ============================================================
+
+@app.route("/income")
+@login_required
+def income():
+    incomes = Income.query.order_by(
+        Income.start_date.desc(),
+        Income.id.desc()
+    ).all()
+
+    total = round(sum(i.amount for i in incomes), 2)
+
+    month_expression = func.strftime("%Y-%m", Income.start_date)
+    month_rows = db.session.query(
+        month_expression,
+        func.sum(Income.amount)
+    ).group_by(
+        month_expression
+    ).order_by(
+        month_expression
+    ).all()
+
+    month_labels = [month for month, _ in month_rows]
+    month_values = [round(float(amount or 0), 2) for _, amount in month_rows]
+
+    return render_template(
+        "income.html",
+        incomes=incomes,
+        total=total,
+        categories=INCOME_CATEGORIES,
+        month_labels=month_labels,
+        month_values=month_values
+    )
+
+
+@app.route("/income/add", methods=["POST"])
+@login_required
+def add_income():
+    description = (request.form.get("description") or "").strip()
+    amount_str = (request.form.get("amount") or "").strip()
+    category = (request.form.get("category") or "").strip()
+    start_str = (request.form.get("start_date") or "").strip()
+    end_str = (request.form.get("end_date") or "").strip()
+
+    if not description or not amount_str or not category or not start_str or not end_str:
+        flash("Please fill in all income fields.", "error")
+        return redirect(url_for("income"))
+
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        flash("Amount must be a positive number.", "error")
+        return redirect(url_for("income"))
+
+    start_date = parse_date_or_none(start_str)
+    end_date = parse_date_or_none(end_str)
+
+    if not start_date or not end_date:
+        flash("Please enter valid start and end dates.", "error")
+        return redirect(url_for("income"))
+
+    if end_date < start_date:
+        flash("End date cannot be before start date.", "error")
+        return redirect(url_for("income"))
+
+    income_item = Income(
+        description=description,
+        amount=amount,
+        category=category,
+        start_date=start_date,
+        end_date=end_date
+    )
+
+    db.session.add(income_item)
+    db.session.commit()
+
+    flash("Income added.", "success")
+    return redirect(url_for("income"))
+
+
+@app.route("/income/delete/<int:income_id>", methods=["POST"])
+@login_required
+def delete_income(income_id):
+    income_item = Income.query.get_or_404(income_id)
+
+    db.session.delete(income_item)
+    db.session.commit()
+
+    flash("Income deleted.", "success")
+    return redirect(url_for("income"))
+
+
+@app.route("/income/edit/<int:income_id>", methods=["GET"])
+@login_required
+def edit_income(income_id):
+    income_item = Income.query.get_or_404(income_id)
+
+    return render_template(
+        "income_edit.html",
+        income=income_item,
+        categories=INCOME_CATEGORIES
+    )
+
+
+@app.route("/income/edit/<int:income_id>", methods=["POST"])
+@login_required
+def edit_income_post(income_id):
+    income_item = Income.query.get_or_404(income_id)
+
+    description = (request.form.get("description") or "").strip()
+    amount_str = (request.form.get("amount") or "").strip()
+    category = (request.form.get("category") or "").strip()
+    start_str = (request.form.get("start_date") or "").strip()
+    end_str = (request.form.get("end_date") or "").strip()
+
+    if not description or not amount_str or not category or not start_str or not end_str:
+        flash("Please fill in all income fields.", "error")
+        return redirect(url_for("edit_income", income_id=income_id))
+
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        flash("Amount must be a positive number.", "error")
+        return redirect(url_for("edit_income", income_id=income_id))
+
+    start_date = parse_date_or_none(start_str)
+    end_date = parse_date_or_none(end_str)
+
+    if not start_date or not end_date:
+        flash("Please enter valid start and end dates.", "error")
+        return redirect(url_for("edit_income", income_id=income_id))
+
+    if end_date < start_date:
+        flash("End date cannot be before start date.", "error")
+        return redirect(url_for("edit_income", income_id=income_id))
+
+    income_item.description = description
+    income_item.amount = amount
+    income_item.category = category
+    income_item.start_date = start_date
+    income_item.end_date = end_date
+
+    db.session.commit()
+
+    flash("Income updated.", "success")
+    return redirect(url_for("income"))
 
 # ============================================================
 # EXPORT CSV
