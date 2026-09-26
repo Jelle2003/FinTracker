@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Edit Income · FINTRACK</title>
+<script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script></head>
+<body class="h-full bg-slate-900 text-slate-100">
+<main class="mx-auto max-w-xl px-4 py-8">
+<header class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+<a href="{{url_for('index')}}" class="text-xl font-bold tracking-tight"><span class="text-brand">FIN</span>TRACK</a>
+<nav class="flex gap-2"><a href="{{url_for('index')}}" class="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm">Dashboard</a><a href="{{url_for('income')}}" class="rounded-xl border border-brand/30 bg-brand/10 px-4 py-2 text-sm text-brand">Income</a></nav>
+</header>
+<section class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+<h1 class="text-2xl font-semibold mb-5">Edit income</h1>
+<form method="post" action="{{url_for('edit_income_post',income_id=income.id)}}" class="space-y-4">
+<label class="block text-sm"><span class="mb-1 block text-slate-300">Description</span><input name="description" value="{{income.description}}" required class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2"></label>
+<label class="block text-sm"><span class="mb-1 block text-slate-300">Amount</span><input name="amount" type="number" step="0.01" min="0.01" value="{{income.amount}}" required class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2"></label>
+<label class="block text-sm"><span class="mb-1 block text-slate-300">Category</span><select name="category" required class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2">{% for c in categories %}<option value="{{c}}" {% if income.category==c %}selected{% endif %}>{{c}}</option>{% endfor %}</select></label>
+<div class="grid grid-cols-2 gap-3"><label class="block text-sm"><span class="mb-1 block text-slate-300">Start date</span><input name="start_date" type="date" value="{{income.start_date.isoformat()}}" required class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2"></label>
+<label class="block text-sm"><span class="mb-1 block text-slate-300">End date</span><input name="end_date" type="date" value="{{income.end_date.isoformat()}}" required class="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2"></label></div>
+<div class="flex gap-2"><button type="submit" class="rounded-xl bg-brand/20 text-brand px-4 py-2 border border-brand/30">Save changes</button><a href="{{url_for('income')}}" class="rounded-xl bg-slate-800 px-4 py-2 border border-slate-700">Cancel</a></div>
+</form>
+</section>
+</main></body></html>
