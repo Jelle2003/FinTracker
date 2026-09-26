@@ -187,6 +187,55 @@ def index():
     )
 
 
+@app.route("/expenses")
+@login_required
+def expenses():
+    start_str = (request.args.get("start") or "").strip()
+    end_str = (request.args.get("end") or "").strip()
+    selected_category = (request.args.get("category") or "").strip()
+    start_date = parse_date_or_none(start_str)
+    end_date = parse_date_or_none(end_str)
+
+    if start_date and end_date and end_date < start_date:
+        flash("End date cannot be before start date", "error")
+        start_date = end_date = None
+        start_str = end_str = ""
+
+    q = Expense.query
+    if start_date:
+        q = q.filter(Expense.date >= start_date)
+    if end_date:
+        q = q.filter(Expense.date <= end_date)
+    if selected_category:
+        q = q.filter(Expense.category == selected_category)
+    expenses = q.order_by(Expense.date.desc(), Expense.id.desc()).all()
+    total = round(sum(e.amount for e in expenses), 2)
+
+    cat_q = db.session.query(Expense.category, func.sum(Expense.amount))
+    day_q = db.session.query(Expense.date, func.sum(Expense.amount))
+    for query in (cat_q, day_q):
+        if start_date:
+            query = query.filter(Expense.date >= start_date)
+        if end_date:
+            query = query.filter(Expense.date <= end_date)
+        if selected_category:
+            query = query.filter(Expense.category == selected_category)
+        if query is cat_q:
+            pass
+
+    cat_rows = cat_q.filter(*([Expense.date >= start_date] if start_date else []),
+                            *([Expense.date <= end_date] if end_date else []),
+                            *([Expense.category == selected_category] if selected_category else [])).group_by(Expense.category).all()
+    day_rows = day_q.filter(*([Expense.date >= start_date] if start_date else []),
+                            *([Expense.date <= end_date] if end_date else []),
+                            *([Expense.category == selected_category] if selected_category else [])).group_by(Expense.date).order_by(Expense.date).all()
+    return render_template("expenses.html", categories=CATEGORIES,
+        today=date.today().isoformat(), expenses=expenses, total=total,
+        start_str=start_str, end_str=end_str, selected_category=selected_category,
+        cat_labels=[c for c, _ in cat_rows], cat_values=[round(float(v or 0), 2) for _, v in cat_rows],
+        day_labels=[d.isoformat() for d, _ in day_rows], day_values=[round(float(v or 0), 2) for _, v in day_rows])
+
+
 # ============================================================
 # ADD EXPENSE
 # ============================================================
