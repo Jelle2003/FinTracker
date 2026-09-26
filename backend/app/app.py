@@ -688,7 +688,7 @@ def ollama_chat(prompt, model="qwen2.5:3b-instruct"):
         method="POST"
     )
 
-    with urllib.request.urlopen(req, timeout=180) as response:
+    with urllib.request.urlopen(req, timeout=600) as response:
         result = json.loads(response.read())
 
     return (result.get("message") or {}).get("content", "").strip()
