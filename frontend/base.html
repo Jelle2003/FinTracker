@@ -16,7 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     {% block head_extra %}{% endblock %}
-  </head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
   <body class="h-full bg-slate-900 text-slate-100">
     <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
       <div class="mx-auto max-w-6xl px-4 py-4">
