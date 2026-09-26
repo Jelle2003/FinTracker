@@ -1,10 +1,15 @@
 from flask import Flask, render_template, request, url_for, flash, redirect, Response
 from datetime import date, datetime, date as dt_date
+import os
+import json
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
 from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 from .database import db
-from .models import User, Expense, Income
+from .models import User, Expense, Income, Investment
 
 
 app = Flask(
@@ -71,7 +76,7 @@ def parse_date_or_none(s: str):
 def login():
 
     if current_user.is_authenticated:
-        return redirect(url_for("expenses"))
+        return redirect(url_for("index"))
 
     if request.method == "POST":
 
@@ -568,6 +573,164 @@ def edit_income_post(income_id):
 
     flash("Income updated.", "success")
     return redirect(url_for("income"))
+
+
+
+# ============================================================
+# INVESTING / MARKET DATA
+# ============================================================
+
+def fetch_url(url, timeout=8):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "FINTRACK/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return response.read()
+    except Exception:
+        return None
+
+
+def market_price(symbol):
+    encoded = urllib.parse.quote(symbol.strip().upper(), safe="")
+    data = fetch_url(f"https://query1.finance.yahoo.com/v8/finance/chart/{encoded}?range=1d&interval=1d")
+    if not data:
+        return None
+    try:
+        payload = json.loads(data)
+        result = payload["chart"]["result"][0]
+        meta = result.get("meta", {})
+        price = meta.get("regularMarketPrice")
+        currency = meta.get("currency", "")
+        return {"price": float(price), "currency": currency} if price is not None else None
+    except Exception:
+        return None
+
+
+def market_news():
+    query = urllib.parse.quote("stock market OR investing OR ETF OR economy")
+    data = fetch_url(f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en")
+    if not data:
+        return []
+    try:
+        root = ET.fromstring(data)
+        items = []
+        for item in root.findall("./channel/item")[:12]:
+            items.append({
+                "title": item.findtext("title") or "",
+                "link": item.findtext("link") or "",
+                "published": item.findtext("pubDate") or "",
+                "source": item.findtext("source") or ""
+            })
+        return items
+    except Exception:
+        return []
+
+
+@app.route("/investing")
+@login_required
+def investing():
+    holdings = Investment.query.order_by(Investment.symbol).all()
+    rows = []
+    total_cost = 0.0
+    total_value = 0.0
+    all_prices = True
+    for h in holdings:
+        cost = h.quantity * h.average_price
+        quote = market_price(h.symbol)
+        current_price = quote["price"] if quote else None
+        value = h.quantity * current_price if current_price is not None else None
+        total_cost += cost
+        if value is not None:
+            total_value += value
+        else:
+            all_prices = False
+        rows.append({"holding": h, "cost": cost, "current_price": current_price,
+                     "value": value, "currency": quote["currency"] if quote else ""})
+    gain = total_value - total_cost if holdings and all_prices else None
+    return render_template("investing.html", rows=rows, total_cost=total_cost,
+                           total_value=total_value, gain=gain)
+
+
+@app.route("/investing/add", methods=["POST"])
+@login_required
+def add_investment():
+    symbol = (request.form.get("symbol") or "").strip().upper()
+    name = (request.form.get("name") or symbol).strip()
+    asset_type = (request.form.get("asset_type") or "ETF").strip()
+    try:
+        quantity = float(request.form.get("quantity") or 0)
+        average_price = float(request.form.get("average_price") or 0)
+        if not symbol or quantity <= 0 or average_price < 0:
+            raise ValueError
+    except ValueError:
+        flash("Vul een geldig symbool, aantal en aankoopprijs in.", "error")
+        return redirect(url_for("investing"))
+    db.session.add(Investment(symbol=symbol, name=name, asset_type=asset_type,
+                              quantity=quantity, average_price=average_price))
+    db.session.commit()
+    flash("Belegging toegevoegd.", "success")
+    return redirect(url_for("investing"))
+
+
+@app.route("/investing/delete/<int:investment_id>", methods=["POST"])
+@login_required
+def delete_investment(investment_id):
+    item = Investment.query.get_or_404(investment_id)
+    db.session.delete(item)
+    db.session.commit()
+    flash("Belegging verwijderd.", "success")
+    return redirect(url_for("investing"))
+
+
+@app.route("/market")
+@login_required
+def market():
+    return render_template("market.html", news=market_news())
+
+
+@app.route("/ai-investor", methods=["GET", "POST"])
+@login_required
+def ai_investor():
+    answer = None
+    question = ""
+    if request.method == "POST":
+        question = (request.form.get("question") or "").strip()
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not question:
+            flash("Stel eerst een vraag.", "error")
+        elif not api_key:
+            flash("De AI is nog niet geconfigureerd. Voeg OPENAI_API_KEY toe op de Raspberry Pi.", "error")
+        else:
+            holdings = Investment.query.all()
+            portfolio = [{"symbol": h.symbol, "name": h.name, "type": h.asset_type,
+                          "quantity": h.quantity, "average_price": h.average_price} for h in holdings]
+            news = market_news()[:8]
+            prompt = (
+                "Je bent de neutrale financiële onderzoeksassistent van FINTRACK. "
+                "Geef geen gegarandeerde rendementen en presenteer geen koop/verkoopbeslissing als zekerheid. "
+                "Leg aannames, risico's en onzekerheden uit. Gebruik de meegegeven actuele nieuwsitems als context "
+                "en zeg duidelijk wanneer actuele data ontbreekt. Dit is algemene informatie, geen persoonlijk financieel advies.\n\n"
+                f"PORTFOLIO: {json.dumps(portfolio, ensure_ascii=False)}\n"
+                f"RECENT NIEUWS: {json.dumps(news, ensure_ascii=False)}\n\n"
+                f"VRAAG VAN DE GEBRUIKER: {question}"
+            )
+            payload = json.dumps({"model": "gpt-5.6-luna", "input": prompt, "max_output_tokens": 1200}).encode()
+            try:
+                req = urllib.request.Request(
+                    "https://api.openai.com/v1/responses", data=payload,
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    result = json.loads(response.read())
+                answer = result.get("output_text")
+                if not answer:
+                    answer = "\n".join(
+                        part.get("text", "") for item in result.get("output", [])
+                        for part in item.get("content", []) if part.get("type") == "output_text"
+                    )
+            except Exception as exc:
+                flash(f"AI-aanvraag mislukt: {exc}", "error")
+    return render_template("ai_investor.html", answer=answer, question=question)
 
 # ============================================================
 # EXPORT CSV
