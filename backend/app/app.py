@@ -658,7 +658,8 @@ def market_snapshot(symbols=None):
     return result
 
 
-def ollama_chat(prompt, model="qwen2.5:3b-instruct"):
+def ollama_chat(prompt, model=None):
+    model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
     payload = json.dumps({
         "model": model,
         "messages": [
@@ -678,7 +679,8 @@ def ollama_chat(prompt, model="qwen2.5:3b-instruct"):
             {"role": "user", "content": prompt}
         ],
         "stream": False,
-        "options": {"temperature": 0.2}
+        "options": {"temperature": 0.2, "num_ctx": 2048, "num_predict": 400},
+        "keep_alive": "10m"
     }).encode("utf-8")
 
     req = urllib.request.Request(
@@ -795,7 +797,7 @@ def ai_investor():
                         "currency": item["currency"]
                     })
 
-            news = market_news(question)[:10]
+            news = market_news(question)[:5]
 
             prompt = (
                 f"VANDAAG: {date.today().isoformat()}\n\n"
