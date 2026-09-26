@@ -821,8 +821,8 @@ def ai_investor():
                     flash("De lokale AI gaf geen antwoord terug.", "error")
             except urllib.error.URLError:
                 flash(
-                    "De lokale AI is niet bereikbaar. Controleer of Ollama draait "
-                    "en of het model qwen2.5:3b-instruct is geïnstalleerd.",
+                    "De lokale AI is niet bereikbaar of reageert niet op tijd. Controleer of Ollama draait "
+                    "en of het ingestelde model geïnstalleerd is.",
                     "error"
                 )
             except Exception as exc:
