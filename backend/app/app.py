@@ -213,16 +213,6 @@ def expenses():
 
     cat_q = db.session.query(Expense.category, func.sum(Expense.amount))
     day_q = db.session.query(Expense.date, func.sum(Expense.amount))
-    for query in (cat_q, day_q):
-        if start_date:
-            query = query.filter(Expense.date >= start_date)
-        if end_date:
-            query = query.filter(Expense.date <= end_date)
-        if selected_category:
-            query = query.filter(Expense.category == selected_category)
-        if query is cat_q:
-            pass
-
     cat_rows = cat_q.filter(*([Expense.date >= start_date] if start_date else []),
                             *([Expense.date <= end_date] if end_date else []),
                             *([Expense.category == selected_category] if selected_category else [])).group_by(Expense.category).all()
