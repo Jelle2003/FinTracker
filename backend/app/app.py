@@ -172,6 +172,57 @@ def index():
     recent_expenses = Expense.query.order_by(Expense.date.desc(), Expense.id.desc()).limit(5).all()
     recent_incomes = Income.query.order_by(Income.start_date.desc(), Income.id.desc()).limit(5).all()
 
+    # --------------------------------------------------------
+    # Beleggingssamenvatting
+    # De dashboardcijfers komen rechtstreeks uit dezelfde
+    # Investment-tabel als de pagina "Beleggen".
+    # --------------------------------------------------------
+    investments = Investment.query.order_by(Investment.name.asc()).all()
+    investment_rows = []
+    investment_total_cost = 0.0
+    investment_market_value = 0.0
+    priced_investments = 0
+
+    for investment in investments:
+        quantity = float(investment.quantity or 0)
+        average_price = float(investment.average_price or 0)
+        cost = quantity * average_price
+        quote = market_price(investment.symbol)
+
+        current_price = quote["price"] if quote else None
+        current_value = quantity * current_price if current_price is not None else None
+
+        investment_total_cost += cost
+        if current_value is not None:
+            investment_market_value += current_value
+            priced_investments += 1
+
+        gain = (current_value - cost) if current_value is not None else None
+        gain_pct = ((gain / cost) * 100) if gain is not None and cost else None
+
+        investment_rows.append({
+            "id": investment.id,
+            "symbol": investment.symbol,
+            "name": investment.name,
+            "asset_type": investment.asset_type,
+            "quantity": quantity,
+            "average_price": average_price,
+            "cost": cost,
+            "current_price": current_price,
+            "current_value": current_value,
+            "gain": gain,
+            "gain_pct": gain_pct,
+            "currency": quote.get("currency", "") if quote else "",
+        })
+
+    investment_total_cost = round(investment_total_cost, 2)
+    investment_market_value = round(investment_market_value, 2)
+    investment_gain = round(investment_market_value - investment_total_cost, 2) if investments and priced_investments == len(investments) else None
+    investment_return = round((investment_gain / investment_total_cost) * 100, 1) if investment_gain is not None and investment_total_cost else None
+
+    # Voor de dashboardweergave: grootste posities eerst.
+    investment_rows.sort(key=lambda item: (item["current_value"] if item["current_value"] is not None else item["cost"]), reverse=True)
+
     income_total = round(float(income_total), 2)
     expense_total = round(float(expense_total), 2)
     balance = round(income_total - expense_total, 2)
@@ -190,7 +241,14 @@ def index():
         expense_values=expense_values,
         category_labels=[c for c, _ in category_rows],
         category_values=[round(float(v or 0), 2) for _, v in category_rows],
-        recent_expenses=recent_expenses, recent_incomes=recent_incomes
+        recent_expenses=recent_expenses, recent_incomes=recent_incomes,
+        investment_rows=investment_rows,
+        investment_total_cost=investment_total_cost,
+        investment_market_value=investment_market_value,
+        investment_gain=investment_gain,
+        investment_return=investment_return,
+        investment_count=len(investments),
+        investment_priced_count=priced_investments
     )
 
 
