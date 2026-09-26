@@ -1,182 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Login - FINTRACK</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            font-family: Arial, sans-serif;
-
-            background: #f4f6f8;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .login-card {
-            background: white;
-            padding: 35px;
-            border-radius: 12px;
-
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo h1 {
-            margin: 0;
-            font-size: 32px;
-            letter-spacing: 2px;
-        }
-
-        .logo p {
-            margin-top: 8px;
-            color: #777;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-
-            border: 1px solid #ccc;
-            border-radius: 7px;
-
-            font-size: 16px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #333;
-        }
-
-        button {
-            width: 100%;
-            padding: 13px;
-
-            border: none;
-            border-radius: 7px;
-
-            background: #111;
-            color: white;
-
-            font-size: 16px;
-            font-weight: bold;
-
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #333;
-        }
-
-        .message {
-            padding: 10px;
-            margin-bottom: 20px;
-
-            border-radius: 7px;
-
-            background: #f8d7da;
-            color: #842029;
-        }
-    </style>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="theme-color" content="#08111f">
+    <title>Inloggen · FINTRACK</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
-<body>
-
-<div class="login-container">
-
-    <div class="login-card">
-
-        <div class="logo">
-            <h1>FINTRACK</h1>
-            <p>Personal finance dashboard</p>
+<body class="login-page">
+    <div class="login-shell">
+        <div class="login-brand" aria-label="FINTRACK">
+            <div class="login-logo">F</div>
+            <div>
+                <div class="login-wordmark"><span>FIN</span>TRACK</div>
+                <div class="login-brand-subtitle">Personal finance, simplified.</div>
+            </div>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        <main class="login-card" aria-labelledby="login-title">
+            <div class="login-card-top">
+                <div>
+                    <p class="login-eyebrow">WELKOM TERUG</p>
+                    <h1 id="login-title">Log in op FINTRACK</h1>
+                    <p class="login-description">Krijg meteen inzicht in je inkomsten, uitgaven en beleggingen.</p>
+                </div>
+                <div class="login-shield" aria-hidden="true">↗</div>
+            </div>
 
-            {% if messages %}
-
-                {% for category, message in messages %}
-
-                    <div class="message">
-                        {{ message }}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="login-messages" aria-live="polite">
+                        {% for category, message in messages %}
+                            <div class="login-message {% if category == 'success' %}is-success{% else %}is-error{% endif %}">
+                                <span class="login-message-icon" aria-hidden="true">{% if category == 'success' %}✓{% else %}!{% endif %}</span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
                     </div>
+                {% endif %}
+            {% endwith %}
 
-                {% endfor %}
+            <form method="POST" class="login-form">
+                <div class="login-field">
+                    <label for="username">Gebruikersnaam</label>
+                    <div class="login-input-wrap">
+                        <span class="login-input-icon" aria-hidden="true">◉</span>
+                        <input type="text" id="username" name="username" required
+                               autocomplete="username" autocapitalize="none"
+                               placeholder="Je gebruikersnaam"
+                               autofocus>
+                    </div>
+                </div>
 
-            {% endif %}
+                <div class="login-field">
+                    <div class="login-label-row">
+                        <label for="password">Wachtwoord</label>
+                    </div>
+                    <div class="login-input-wrap">
+                        <span class="login-input-icon" aria-hidden="true">●</span>
+                        <input type="password" id="password" name="password" required
+                               autocomplete="current-password"
+                               placeholder="Je wachtwoord">
+                        <button type="button" class="password-toggle" id="togglePassword"
+                                aria-label="Wachtwoord tonen" aria-pressed="false">Tonen</button>
+                    </div>
+                </div>
 
-        {% endwith %}
+                <button type="submit" class="login-submit">
+                    <span>Inloggen</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+            </form>
 
-        <form method="POST">
-
-            <div class="form-group">
-                <label for="username">
-                    Username
-                </label>
-
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    required
-                    autocomplete="username"
-                >
+            <div class="login-security">
+                <span class="login-security-icon" aria-hidden="true">✓</span>
+                <div>
+                    <strong>Je financiële gegevens blijven privé</strong>
+                    <span>FINTRACK is ontworpen als jouw persoonlijke dashboard.</span>
+                </div>
             </div>
+        </main>
 
-            <div class="form-group">
-                <label for="password">
-                    Password
-                </label>
-
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    autocomplete="current-password"
-                >
-            </div>
-
-            <button type="submit">
-                Log in
-            </button>
-
-        </form>
-
+        <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
     </div>
 
-</div>
+    <script>
+        (() => {
+            const input = document.getElementById("password");
+            const toggle = document.getElementById("togglePassword");
+            if (!input || !toggle) return;
 
+            toggle.addEventListener("click", () => {
+                const visible = input.type === "text";
+                input.type = visible ? "password" : "text";
+                toggle.textContent = visible ? "Tonen" : "Verbergen";
+                toggle.setAttribute("aria-label", visible ? "Wachtwoord tonen" : "Wachtwoord verbergen");
+                toggle.setAttribute("aria-pressed", String(!visible));
+            });
+        })();
+    </script>
 </body>
 </html>
