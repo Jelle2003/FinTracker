@@ -713,7 +713,7 @@ def ai_investor():
                 f"RECENT NIEUWS: {json.dumps(news, ensure_ascii=False)}\n\n"
                 f"VRAAG VAN DE GEBRUIKER: {question}"
             )
-            payload = json.dumps({"model": "gpt-5.6-luna", "input": prompt, "max_output_tokens": 1200}).encode()
+            payload = json.dumps({"model": "gpt-5.5", "input": prompt, "max_output_tokens": 1200}).encode()
             try:
                 req = urllib.request.Request(
                     "https://api.openai.com/v1/responses", data=payload,
