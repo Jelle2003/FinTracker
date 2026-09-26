@@ -11,12 +11,7 @@
 <main class="mx-auto max-w-6xl px-4 py-8">
 <header class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
 <a href="{{url_for('index')}}" class="text-xl font-bold"><span class="text-brand">FIN</span>TRACK</a>
-<nav class="flex flex-wrap gap-2">
-<a href="{{url_for('index')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Dashboard</a>
-<a href="{{url_for('income')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Inkomsten</a>
-<a href="{{url_for('expenses')}}" class="rounded-xl border border-brand/30 bg-brand/10 px-4 py-2 text-sm text-brand">Uitgaven</a>
-<a href="{{url_for('logout')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Afmelden</a>
-</nav></header>
+<nav class="flex flex-wrap gap-2"><a href="{{url_for('index')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Dashboard</a><a href="{{url_for('income')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Inkomsten</a><a href="{{url_for('expenses')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Uitgaven</a><a href="{{url_for('investing')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Beleggen</a><a href="{{url_for('market')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">AI Adviseur</a><a href="{{url_for('logout')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Afmelden</a></nav></header>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="mb-3 rounded-xl border border-slate-700 p-3">{{message}}</div>{% endfor %}{% endwith %}
 <h1 class="mb-2 text-3xl font-semibold">Uitgaven</h1><p class="mb-6 text-slate-400">Beheer je uitgaven en bekijk de verdeling per categorie.</p>
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
