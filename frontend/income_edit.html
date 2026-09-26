@@ -5,10 +5,7 @@
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
 <main class="mx-auto max-w-xl px-4 py-8">
-<header class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-<a href="{{url_for('index')}}" class="text-xl font-bold tracking-tight"><span class="text-brand">FIN</span>TRACK</a>
-<nav class="flex flex-wrap gap-2"><a href="{{url_for('index')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Dashboard</a><a href="{{url_for('income')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Inkomsten</a><a href="{{url_for('expenses')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Uitgaven</a><a href="{{url_for('investing')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Beleggen</a><a href="{{url_for('market')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">AI Adviseur</a><a href="{{url_for('logout')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Afmelden</a></nav>
-</header>
+<header class="site-header"><div class="site-nav"><a href="{{url_for('index')}}" class="brand-mark"><span>FIN</span>TRACK</a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><nav id="primary-nav" class="primary-nav"><a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div><a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a class="nav-logout" href="{{url_for('logout')}}">Afmelden</a></nav></div></header>
 <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5">
 <h1 class="text-2xl font-semibold mb-5">Edit income</h1>
 <form method="post" action="{{url_for('edit_income_post',income_id=income.id)}}" class="space-y-4">
@@ -20,4 +17,6 @@
 <div class="flex gap-2"><button type="submit" class="rounded-xl bg-brand/20 text-brand px-4 py-2 border border-brand/30">Save changes</button><a href="{{url_for('income')}}" class="rounded-xl bg-slate-800 px-4 py-2 border border-slate-700">Cancel</a></div>
 </form>
 </section>
-</main></body></html>
+</main><script>
+(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
+</script></body></html>
