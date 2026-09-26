@@ -605,9 +605,15 @@ def market_price(symbol):
         return None
 
 
-def market_news():
-    query = urllib.parse.quote("stock market OR investing OR ETF OR economy")
-    data = fetch_url(f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en")
+def market_news(topic=None):
+    base_query = "beleggen OR ETF OR aandelen OR crypto OR economie"
+    if topic:
+        clean_topic = " ".join(topic.split())[:120]
+        base_query = f"{base_query} {clean_topic}"
+    query = urllib.parse.quote(base_query)
+    data = fetch_url(
+        f"https://news.google.com/rss/search?q={query}&hl=nl-BE&gl=BE&ceid=BE:nl"
+    )
     if not data:
         return []
     try:
@@ -623,6 +629,69 @@ def market_news():
         return items
     except Exception:
         return []
+
+
+def market_snapshot(symbols=None):
+    default_symbols = [
+        ("^GSPC", "S&P 500"),
+        ("^IXIC", "Nasdaq"),
+        ("^STOXX50E", "Euro Stoxx 50"),
+        ("^BFX", "BEL 20"),
+        ("BTC-USD", "Bitcoin"),
+        ("ETH-USD", "Ethereum"),
+        ("EURUSD=X", "EUR/USD"),
+        ("GC=F", "Goud"),
+        ("CL=F", "Olie")
+    ]
+    requested = symbols or [symbol for symbol, _ in default_symbols]
+    names = dict(default_symbols)
+    result = []
+    for symbol in requested:
+        quote = market_price(symbol)
+        if quote:
+            result.append({
+                "symbol": symbol,
+                "name": names.get(symbol, symbol),
+                "price": quote["price"],
+                "currency": quote["currency"]
+            })
+    return result
+
+
+def ollama_chat(prompt, model="qwen2.5:3b-instruct"):
+    payload = json.dumps({
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Je bent FINTRACK AI, een Nederlandstalige financiële "
+                    "onderzoeksassistent. Gebruik actuele marktdata en nieuws "
+                    "als primaire context. Geef geen gegarandeerde rendementen "
+                    "en presenteer geen koop/verkoopbeslissing als zekerheid. "
+                    "Maak duidelijk onderscheid tussen feiten, interpretatie "
+                    "en onzekerheid. Geef bij financiële vragen altijd risico's, "
+                    "aannames en relevante Belgische aandachtspunten. "
+                    "Verzin geen actuele cijfers die niet in de aangeleverde data staan."
+                )
+            },
+            {"role": "user", "content": prompt}
+        ],
+        "stream": False,
+        "options": {"temperature": 0.2}
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "http://127.0.0.1:11434/api/chat",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+
+    with urllib.request.urlopen(req, timeout=180) as response:
+        result = json.loads(response.read())
+
+    return (result.get("message") or {}).get("content", "").strip()
 
 
 @app.route("/investing")
@@ -692,120 +761,70 @@ def market():
 def ai_investor():
     answer = None
     question = ""
+
     if request.method == "POST":
         question = (request.form.get("question") or "").strip()
-        api_key = os.environ.get("OPENAI_API_KEY")
+
         if not question:
             flash("Stel eerst een vraag.", "error")
-        elif not api_key:
-            flash("De AI is nog niet geconfigureerd. Voeg OPENAI_API_KEY toe op de Raspberry Pi.", "error")
         else:
             holdings = Investment.query.all()
-            portfolio = [{"symbol": h.symbol, "name": h.name, "type": h.asset_type,
-                          "quantity": h.quantity, "average_price": h.average_price} for h in holdings]
-            news = market_news()[:8]
+            portfolio = []
+            holding_symbols = []
+
+            for h in holdings:
+                quote = market_price(h.symbol)
+                portfolio.append({
+                    "symbol": h.symbol,
+                    "name": h.name,
+                    "type": h.asset_type,
+                    "quantity": h.quantity,
+                    "average_price": h.average_price,
+                    "current_price": quote["price"] if quote else None,
+                    "currency": quote["currency"] if quote else ""
+                })
+                holding_symbols.append(h.symbol)
+
+            market_data = market_snapshot()
+            for item in portfolio:
+                if item["current_price"] is not None:
+                    market_data.append({
+                        "symbol": item["symbol"],
+                        "name": item["name"],
+                        "price": item["current_price"],
+                        "currency": item["currency"]
+                    })
+
+            news = market_news(question)[:10]
+
             prompt = (
-                "Je bent de neutrale financiële onderzoeksassistent van FINTRACK. "
-                "Geef geen gegarandeerde rendementen en presenteer geen koop/verkoopbeslissing als zekerheid. "
-                "Leg aannames, risico's en onzekerheden uit. Gebruik de meegegeven actuele nieuwsitems als context "
-                "en zeg duidelijk wanneer actuele data ontbreekt. Dit is algemene informatie, geen persoonlijk financieel advies.\n\n"
-                f"PORTFOLIO: {json.dumps(portfolio, ensure_ascii=False)}\n"
-                f"RECENT NIEUWS: {json.dumps(news, ensure_ascii=False)}\n\n"
-                f"VRAAG VAN DE GEBRUIKER: {question}"
+                f"VANDAAG: {date.today().isoformat()}\n\n"
+                f"VRAAG VAN DE GEBRUIKER:\n{question}\n\n"
+                f"ACTUELE MARKTDATA:\n{json.dumps(market_data, ensure_ascii=False)}\n\n"
+                f"ACTUEEL NIEUWS:\n{json.dumps(news, ensure_ascii=False)}\n\n"
+                f"PORTFOLIO VAN DE GEBRUIKER:\n{json.dumps(portfolio, ensure_ascii=False)}\n\n"
+                "Beantwoord de vraag concreet in het Nederlands. "
+                "Gebruik de actuele data en nieuwsitems hierboven. "
+                "Als informatie ontbreekt, zeg dat expliciet. "
+                "Als de gebruiker om aandelen, ETF's of crypto vraagt, "
+                "vergelijk relevante opties in plaats van blind één keuze te geven. "
+                "Vermeld bij actuele cijfers altijd dat het moment van ophalen relevant is."
             )
-            payload = json.dumps({"model": "gpt-5.5", "input": prompt, "max_output_tokens": 1200}).encode()
+
             try:
-                req = urllib.request.Request(
-                    "https://api.openai.com/v1/responses", data=payload,
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    method="POST"
-                )
-                with urllib.request.urlopen(req, timeout=30) as response:
-                    result = json.loads(response.read())
-                answer = result.get("output_text")
+                answer = ollama_chat(prompt)
                 if not answer:
-                    answer = "\n".join(
-                        part.get("text", "") for item in result.get("output", [])
-                        for part in item.get("content", []) if part.get("type") == "output_text"
-                    )
+                    flash("De lokale AI gaf geen antwoord terug.", "error")
+            except urllib.error.URLError:
+                flash(
+                    "De lokale AI is niet bereikbaar. Controleer of Ollama draait "
+                    "en of het model qwen2.5:3b-instruct is geïnstalleerd.",
+                    "error"
+                )
             except Exception as exc:
                 flash(f"AI-aanvraag mislukt: {exc}", "error")
+
     return render_template("ai_investor.html", answer=answer, question=question)
 
-# ============================================================
-# EXPORT CSV
-# ============================================================
-
-@app.route("/export.csv")
-@login_required
-def export_csv():
-
-    start_str = (
-        request.args.get("start") or ""
-    ).strip()
-
-    end_str = (
-        request.args.get("end") or ""
-    ).strip()
-
-    selected_category = (
-        request.args.get("category") or ""
-    ).strip()
-
-    start_date = parse_date_or_none(start_str)
-    end_date = parse_date_or_none(end_str)
-
-    q = Expense.query
-
-    if start_date:
-        q = q.filter(Expense.date >= start_date)
-
-    if end_date:
-        q = q.filter(Expense.date <= end_date)
-
-    if selected_category:
-        q = q.filter(
-            Expense.category == selected_category
-        )
-
-    expenses = q.order_by(
-        Expense.date,
-        Expense.id
-    ).all()
-
-    lines = [
-        "date; description; category; amount"
-    ]
-
-    for expense in expenses:
-        lines.append(
-            f"{expense.date.isoformat()}; "
-            f"{expense.description}; "
-            f"{expense.category}; "
-            f"{expense.amount:.2f}"
-        )
-
-    csv_data = "\n".join(lines)
-
-    fname_start = start_str or "all"
-    fname_end = end_str or "all"
-
-    filename = (
-        f"expenses_{fname_start}_to_{fname_end}.csv"
-    )
-
-    return Response(
-        csv_data,
-        headers={
-            "Content-Type": "text/csv",
-            "Content-Disposition":
-                f"attachment; filename={filename}"
-        }
-    )
 
 
-if __name__ == "__main__":
-    app.run(
-        debug=True,
-        port=4848
-    )
