@@ -10,9 +10,7 @@
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
 <main class="mx-auto max-w-6xl px-4 py-8">
-<header class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-<a href="{{url_for('index')}}" class="text-xl font-bold"><span class="text-brand">FIN</span>TRACK</a>
-<nav class="flex flex-wrap gap-2"><a href="{{url_for('index')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Dashboard</a><a href="{{url_for('income')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Inkomsten</a><a href="{{url_for('expenses')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Uitgaven</a><a href="{{url_for('investing')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Beleggen</a><a href="{{url_for('market')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">AI Adviseur</a><a href="{{url_for('logout')}}" class="rounded-xl border border-slate-700 px-4 py-2 text-sm">Afmelden</a></nav></header>
+<header class="site-header"><div class="site-nav"><a href="{{url_for('index')}}" class="brand-mark"><span>FIN</span>TRACK</a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><nav id="primary-nav" class="primary-nav"><a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div><a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a class="nav-logout" href="{{url_for('logout')}}">Afmelden</a></nav></div></header>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="mb-3 rounded-xl border border-slate-700 p-3">{{message}}</div>{% endfor %}{% endwith %}
 <h1 class="mb-2 text-3xl font-semibold">Uitgaven</h1><p class="mb-6 text-slate-400">Beheer je uitgaven en bekijk de verdeling per categorie.</p>
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -39,4 +37,6 @@
 </tbody></table></section>
 </main>
 <script>new Chart(document.getElementById("catChart"),{type:"doughnut",data:{labels:{{cat_labels|tojson}},datasets:[{data:{{cat_values|tojson}}}]},options:{plugins:{legend:{labels:{color:"#cbd5e1"}}}}});</script>
-</body></html>
+<script>
+(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
+</script></body></html>
