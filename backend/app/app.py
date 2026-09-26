@@ -591,6 +591,59 @@ def fetch_url(url, timeout=8):
         return None
 
 
+def investment_search(query):
+    """Search Yahoo Finance symbols for the investment autocomplete."""
+    clean = " ".join((query or "").split())[:80]
+    if len(clean) < 2:
+        return []
+
+    encoded = urllib.parse.quote(clean)
+    data = fetch_url(
+        f"https://query1.finance.yahoo.com/v1/finance/search?q={encoded}&quotesCount=12&newsCount=0"
+    )
+    if not data:
+        return []
+
+    try:
+        payload = json.loads(data)
+        results = []
+        for item in payload.get("quotes", []):
+            symbol = (item.get("symbol") or "").strip().upper()
+            name = (item.get("longname") or item.get("shortname") or symbol).strip()
+            quote_type = (item.get("quoteType") or "").upper()
+            exchange = (item.get("exchange") or item.get("fullExchangeName") or "").strip()
+            if not symbol or not name:
+                continue
+
+            if quote_type == "EQUITY":
+                asset_type = "Aandeel"
+            elif quote_type in {"ETF", "MUTUALFUND"}:
+                asset_type = "ETF"
+            elif quote_type in {"CRYPTOCURRENCY", "CRYPTO"}:
+                asset_type = "Crypto"
+            elif quote_type == "BOND":
+                asset_type = "Obligatie"
+            else:
+                asset_type = "Andere"
+
+            results.append({
+                "symbol": symbol,
+                "name": name,
+                "asset_type": asset_type,
+                "exchange": exchange,
+            })
+        return results[:10]
+    except Exception:
+        return []
+
+
+@app.route("/api/investing/search")
+@login_required
+def investment_search_api():
+    query = (request.args.get("q") or "").strip()
+    return {"results": investment_search(query)}
+
+
 def market_price(symbol):
     encoded = urllib.parse.quote(symbol.strip().upper(), safe="")
     data = fetch_url(f"https://query1.finance.yahoo.com/v8/finance/chart/{encoded}?range=1d&interval=1d")
