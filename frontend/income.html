@@ -81,7 +81,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 <section class="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900 p-4">
 <h2 class="text-lg font-semibold mb-3">Income overview</h2>
-<div class="mb-4"><span class="text-sm text-slate-300 mr-2">Total income:</span><span class="inline-block rounded-xl border border-slate-700 bg-slate-800 px-3 py-1 font-semibold">€{{'%.2f'|format(total or 0)}}</span></div>
+<div class="mb-4"><span class="text-sm text-slate-300 mr-2">Total income:</span><span class="inline-block rounded-xl border border-slate-700 bg-slate-800 px-3 py-1 font-semibold">{{ currency_symbol }}{{'%.2f'|format(total or 0)}}</span></div>
 <div id="incomeChart" class="native-income-chart"></div>
 </section>
 
@@ -112,7 +112,7 @@
 <tr class="border-t border-slate-800 hover:bg-slate-800/30">
 <td class="px-4 py-2 whitespace-nowrap">{{item.start_date.strftime("%Y-%m-%d")}} → {{item.end_date.strftime("%Y-%m-%d")}}</td>
 <td class="px-4 py-2">{{item.description}}</td><td class="px-4 py-2">{{item.category}}</td>
-<td class="px-4 py-2 text-right">€{{'%.2f'|format(item.amount)}}</td>
+<td class="px-4 py-2 text-right">{{ currency_symbol }}{{'%.2f'|format(item.amount)}}</td>
 <td class="px-4 py-2 text-right"><div class="inline-flex gap-2">
 <a href="{{url_for('edit_income',income_id=item.id)}}" class="text-sky-300 hover:text-sky-200 text-xs border border-sky-400/30 px-3 py-1 rounded-lg">EDIT</a>
 <form method="post" action="{{url_for('delete_income',income_id=item.id)}}" onsubmit="return confirm('Are you sure you want to delete this income?')">
@@ -162,7 +162,7 @@ function drawIncomeChart(){
     bar.setAttribute("x",xx);bar.setAttribute("y",yy);bar.setAttribute("width",barWidth);bar.setAttribute("height",Math.max(bh,2));
     bar.setAttribute("rx",mobile?"6":"8");bar.setAttribute("fill",barColor);bar.setAttribute("fill-opacity",".82");
     const barTitle=document.createElementNS("http://www.w3.org/2000/svg","title");
-    barTitle.textContent=monthLabels[i]+": €"+Number(v).toFixed(2);bar.appendChild(barTitle);svg.appendChild(bar);
+    barTitle.textContent=monthLabels[i]+": {{ currency_symbol }}"+Number(v).toFixed(2);bar.appendChild(barTitle);svg.appendChild(bar);
 
     if(!mobile||i%2===0){
       const label=document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -171,7 +171,7 @@ function drawIncomeChart(){
     }
     if(v>0&&(!mobile||v===Math.max(...monthValues))){
       const amount=document.createElementNS("http://www.w3.org/2000/svg","text");
-      amount.textContent="€"+Math.round(v);amount.setAttribute("x",xx+barWidth/2);amount.setAttribute("y",Math.max(yy-7,12));
+      amount.textContent="{{ currency_symbol }}"+Math.round(v);amount.setAttribute("x",xx+barWidth/2);amount.setAttribute("y",Math.max(yy-7,12));
       amount.setAttribute("text-anchor","middle");amount.setAttribute("fill",text);amount.setAttribute("font-size",mobile?"9":"10");amount.setAttribute("font-weight","700");svg.appendChild(amount);
     }
   });
