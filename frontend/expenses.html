@@ -10,65 +10,7 @@
 <body class="h-full bg-slate-900 text-slate-100">
 
 <main class="mx-auto max-w-6xl px-4 py-8">
-<header class="site-header"><div class="site-nav"><a href="{{url_for('index')}}" class="brand-mark" aria-label="FINTRACK home">
-  <span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 32 32" role="img"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M8 21.5 13 16l4 3 7-8" fill="none" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10h8" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round"/></svg></span><span class="brand-wordmark"><b>FIN</b>TRACK</span>
-</a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button><nav id="primary-nav" class="primary-nav" aria-label="Hoofdnavigatie">
-      <a href="{{url_for('index')}}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">Overzicht</a>
-      <a href="{{url_for('goals')}}" class="{% if request.endpoint == 'goals' %}is-active{% endif %}">Spaardoelen</a>
-
-      <details class="nav-dropdown">
-        <summary class="{% if request.endpoint in ['income','expenses'] %}is-active{% endif %}">
-          <span>Financiën</span><span class="nav-chevron" aria-hidden="true">⌄</span>
-        </summary>
-        <div class="nav-dropdown-menu">
-          <a href="{{url_for('income')}}" class="{% if request.endpoint == 'income' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon income-icon">↗</span><span><b>Inkomsten</b><small>Geld dat binnenkomt</small></span>
-          </a>
-          <a href="{{url_for('expenses')}}" class="{% if request.endpoint == 'expenses' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon expense-icon">↘</span><span><b>Uitgaven</b><small>Geld dat je besteedt</small></span>
-          </a>
-        </div>
-      </details>
-
-      <details class="nav-dropdown">
-        <summary class="{% if request.endpoint in ['investing','market'] %}is-active{% endif %}">
-          <span>Vermogen</span><span class="nav-chevron" aria-hidden="true">⌄</span>
-        </summary>
-        <div class="nav-dropdown-menu">
-          <a href="{{url_for('investing')}}" class="{% if request.endpoint == 'investing' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon invest-icon">↗</span><span><b>Beleggen</b><small>Je portefeuille & posities</small></span>
-          </a>
-          <a href="{{url_for('market')}}" class="{% if request.endpoint == 'market' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon market-icon">◌</span><span><b>Markt & Nieuws</b><small>Koersen en financieel nieuws</small></span>
-          </a>
-        </div>
-      </details>
-
-      <a href="{{url_for('ai_investor')}}" class="{% if request.endpoint == 'ai_investor' %}is-active{% endif %}">
-        <span class="nav-ai-dot" aria-hidden="true">✦</span> AI Adviseur
-      </a>
-
-      <details class="nav-dropdown nav-account-dropdown">
-        <summary class="{% if request.endpoint in ['account','admin'] %}is-active{% endif %}">
-          <span>Account</span><span class="nav-chevron" aria-hidden="true">⌄</span>
-        </summary>
-        <div class="nav-dropdown-menu nav-dropdown-menu-right">
-          <a href="{{url_for('account')}}" class="{% if request.endpoint == 'account' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon account-icon">◎</span><span><b>Account</b><small>Wachtwoord en beveiliging</small></span>
-          </a>
-          {% if current_user.is_admin %}
-          <a href="{{url_for('admin')}}" class="admin-dropdown-item {% if request.endpoint == 'admin' %}is-active{% endif %}">
-            <span class="nav-dropdown-icon admin-icon">◆</span><span><b>Admin</b><small>Gebruikers en beheer</small></span>
-          </a>
-          {% endif %}
-        </div>
-      </details>
-
-      <form method="post" action="{{url_for('logout')}}" class="nav-logout-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="nav-logout"><span aria-hidden="true">↪</span> Afmelden</button>
-      </form>
-    </nav></div></header>
+{% include '_navbar.html' %}
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="mb-3 rounded-xl border border-slate-700 p-3">{{message}}</div>{% endfor %}{% endwith %}
 <h1 class="mb-2 text-3xl font-semibold">Uitgaven</h1><p class="mb-6 text-slate-400">Beheer je uitgaven en bekijk de verdeling per categorie.</p>
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
