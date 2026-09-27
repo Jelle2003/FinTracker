@@ -7,9 +7,47 @@
   <span class="theme-toggle-label">Donker</span>
 </button><main class="mx-auto max-w-5xl px-4 py-8">
 <header class="site-header"><div class="site-nav"><a href="{{url_for('index')}}" class="brand-mark"><span>FIN</span>TRACK</a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><nav id="primary-nav" class="primary-nav"><a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div><a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a href="{{url_for('account')}}">Account</a><form method="post" action="{{url_for('logout')}}" class="nav-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-logout">Afmelden</button></form></nav></div></header>
-<h1 class="text-3xl font-semibold">Markt & Nieuws</h1><p class="mt-1 mb-6 text-slate-400">Recente berichten over aandelen, ETF's, economie en financiële markten.</p>
-<div class="space-y-3">{% for item in news %}<article class="rounded-2xl border border-slate-800 p-4 hover:bg-slate-800/40">{% if item.link %}<a href="{{item.link}}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="text-lg font-medium hover:text-brand">{{item.title}}</a>{% else %}<span class="text-lg font-medium">{{item.title}}</span>{% endif %}<p class="mt-2 text-xs text-slate-500">{{item.source}} · {{item.published}}</p></article>{% else %}<div class="rounded-2xl border border-slate-800 p-6 text-slate-400">Nieuws kon momenteel niet worden opgehaald. Probeer later opnieuw.</div>{% endfor %}</div>
-</main><script nonce="{{ g.csp_nonce }}">
+<div class="market-page">
+<h1 class="text-3xl font-semibold">Markt & Nieuws</h1>
+<p class="mt-1 mb-5 text-slate-400">Financiële marktdata en nieuws uit Google News en Yahoo Finance, gefilterd op relevantie en chronologisch gesorteerd.</p>
+<div class="market-source-bar rounded-2xl border border-slate-800 p-4 mb-5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="market-source-label">Databronnen</span>
+<a class="market-source-chip" href="https://www.google.com/finance/" target="_blank" rel="noopener noreferrer">Google Finance ↗</a>
+<a class="market-source-chip" href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer">Yahoo Finance ↗</a>
+<span class="market-source-note">Google Finance heeft geen publieke third-party news API; FINTRACK gebruikt Google News voor historische nieuwszoekopdrachten en toont Google Finance als onderzoekstool.</span>
+</div></div>
+<form method="get" action="{{ url_for('market') }}" class="market-filter rounded-2xl border border-slate-800 p-4 mb-5">
+<div class="grid grid-cols-1 md:grid-cols-[190px_1fr_auto] gap-3 items-end">
+<label class="block"><span class="market-filter-label">Nieuwsdatum</span><input type="date" name="date" value="{{ selected_date }}" class="mt-1"></label>
+<label class="block"><span class="market-filter-label">Onderwerp of aandeel <span>(optioneel)</span></span><input type="search" name="q" value="{{ topic }}" maxlength="100" placeholder="bv. Nvidia, Tesla, ECB, Bitcoin..." class="mt-1"></label>
+<button type="submit" class="market-filter-button">Nieuws ophalen</button>
+</div>
+<p class="market-filter-help">Kies een datum om de nieuwsartikelen van die dag te bekijken. Gebruik het zoekveld om de resultaten verder te richten.</p>
+</form>
+<div class="market-snapshot-grid mb-6">
+{% for item in snapshot %}
+<article class="market-snapshot-card rounded-2xl border border-slate-800 p-4">
+<div class="market-snapshot-name">{{ item.name }}</div>
+<div class="market-snapshot-price">{{ "%.2f"|format(item.price) }}</div>
+<div class="market-snapshot-meta">{{ item.symbol }} · {{ item.currency or "marktdata" }}</div>
+</article>
+{% endfor %}
+</div>
+<div class="market-news-head">
+<div><p class="page-eyebrow">NEWS FEED</p><h2 class="text-2xl font-semibold">Nieuws van {{ selected_date[8:10] }}-{{ selected_date[5:7] }}-{{ selected_date[0:4] }}</h2></div>
+<span class="market-news-count">{{ news|length }} relevante artikelen</span>
+</div>
+<div class="space-y-3">
+{% for item in news %}
+<article class="market-news-card rounded-2xl border border-slate-800 p-4">
+<div class="market-news-meta"><span>{{ item.source }}</span><time datetime="{{ item.published_iso }}">{{ item.published }}</time></div>
+{% if item.link %}<a href="{{ item.link }}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="market-news-title">{{ item.title }}</a>{% else %}<span class="market-news-title">{{ item.title }}</span>{% endif %}
+</article>
+{% else %}
+<div class="rounded-2xl border border-slate-800 p-6 text-slate-400">Geen relevante nieuwsartikelen gevonden voor deze datum en zoekopdracht. Probeer een andere datum of verwijder het zoekwoord.</div>
+{% endfor %}
+</div></div></main><script nonce="{{ g.csp_nonce }}">
 (()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
 </script><script nonce="{{ g.csp_nonce }}">
 /* FINTRACK_THEME */
