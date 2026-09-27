@@ -65,8 +65,6 @@ class Investment(db.Model):
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
     sector = db.Column(db.String(60), nullable=True)
     region = db.Column(db.String(40), nullable=True)
-    sector = db.Column(db.String(60), nullable=True)
-    region = db.Column(db.String(40), nullable=True)
 
 
 class SavingsGoal(db.Model):
