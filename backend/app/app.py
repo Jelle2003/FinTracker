@@ -166,6 +166,14 @@ INCOME_CATEGORIES = [
 ]
 
 
+def safe_external_url(value: str):
+    """Allow only absolute HTTP(S) URLs from external content."""
+    parsed = urllib.parse.urlparse((value or "").strip())
+    if parsed.scheme in {"http", "https"} and parsed.netloc:
+        return value.strip()
+    return ""
+
+
 def parse_date_or_none(s: str):
     if not s:
         return None
@@ -937,7 +945,7 @@ def market_news(topic=None):
         for item in root.findall("./channel/item")[:12]:
             items.append({
                 "title": item.findtext("title") or "",
-                "link": item.findtext("link") or "",
+                "link": safe_external_url(item.findtext("link") or ""),
                 "published": item.findtext("pubDate") or "",
                 "source": item.findtext("source") or ""
             })
