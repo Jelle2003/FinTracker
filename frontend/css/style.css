@@ -1402,3 +1402,76 @@ a.market-news-title:hover{color:var(--brand)}
     animation:none !important;
   }
 }
+
+
+/* Chart legend + hover tooltip */
+.dashboard-chart-card{position:relative}
+.native-chart-legend{
+  align-items:stretch!important;
+  gap:8px!important;
+  margin-top:12px!important;
+}
+.chart-legend-item{
+  display:grid!important;
+  grid-template-columns:9px auto;
+  grid-template-rows:auto auto;
+  column-gap:7px;
+  min-width:112px;
+  padding:8px 11px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface-2);
+}
+.chart-legend-item i{
+  grid-row:1 / span 2;
+  align-self:center;
+  width:8px!important;
+  height:28px!important;
+  border-radius:99px!important;
+}
+.chart-legend-item b{
+  color:var(--text);
+  font-size:.68rem;
+  line-height:1.1;
+}
+.chart-legend-item small{
+  color:var(--muted);
+  font-size:.58rem;
+  line-height:1.1;
+}
+.chart-hover-tooltip{
+  position:absolute;
+  z-index:20;
+  min-width:118px;
+  padding:8px 10px;
+  border:1px solid var(--border-light);
+  border-radius:10px;
+  background:var(--surface);
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  pointer-events:none;
+  opacity:0;
+  transform:translate(-50%,4px);
+  transition:opacity .12s ease,transform .12s ease;
+}
+.chart-hover-tooltip.is-visible{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+.chart-hover-tooltip strong{
+  display:block;
+  color:var(--text);
+  font-size:.65rem;
+  line-height:1.2;
+}
+.chart-hover-tooltip span{
+  display:block;
+  margin-top:3px;
+  color:var(--brand);
+  font-size:.8rem;
+  font-weight:800;
+}
+@media(max-width:760px){
+  .native-chart-legend{justify-content:center!important}
+  .chart-legend-item{min-width:105px;padding:7px 9px}
+  .chart-hover-tooltip{min-width:104px}
+}
