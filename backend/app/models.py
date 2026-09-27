@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     expenses = db.relationship("Expense", backref="user", lazy=True, cascade="all, delete-orphan")
     incomes = db.relationship("Income", backref="user", lazy=True, cascade="all, delete-orphan")
     investments = db.relationship("Investment", backref="user", lazy=True, cascade="all, delete-orphan")
