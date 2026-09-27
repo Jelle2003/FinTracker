@@ -727,10 +727,10 @@ def index():
 
     # FINTRACK 2.0: connect cashflow, goals and investments into one planning layer.
     financial_insights = []
-    if current_user.emergency_fund_target > 0 and balance < current_user.emergency_fund_target:
+    if current_user.emergency_fund_target > 0:
         financial_insights.append(
             f"Je gewenste noodbuffer is {money(current_user.emergency_fund_target)}. "
-            "Controleer eerst of je kortetermijnbuffer voldoende is voordat je extra risico neemt."
+            "FINTRACK houdt dit doel mee in de AI-analyse voordat extra beleggingsruimte wordt besproken."
         )
 
     if current_user.monthly_investment_budget > 0:
