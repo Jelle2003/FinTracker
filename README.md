@@ -237,7 +237,9 @@ curl -I http://127.0.0.1:8000
 
 De ingelogde pagina's gebruiken een gedeelde navigatie-partial in `frontend/_navbar.html`. Hierdoor hoeft de navbar niet meer afzonderlijk in iedere pagina te worden onderhouden en verkleint de kans op verschillen tussen pagina's.
 
-De centrale CSS voor de navigatie staat in `frontend/css/style.css`. De navbar gebruikt vaste afmetingen, consistente spacing en aparte desktop/mobile breakpoints om layout-shifts te voorkomen.
+De centrale CSS voor de navigatie staat in `frontend/css/style.css`.
+
+De dashboard- en mobiele UX zijn verder gepolijst met een mobile-first layout: grotere touch targets, stabiele mobiele navigatie, compacte metric cards, responsive dashboardsecties, verbeterde transactieweergave en een beter leesbare portefeuilleweergave. De desktopweergave behoudt dezelfde visuele structuur. De navbar gebruikt vaste afmetingen, consistente spacing en aparte desktop/mobile breakpoints om layout-shifts te voorkomen.
 
 ## Development
 
