@@ -1118,3 +1118,37 @@ body.theme-light .login-page{background:#f4f7fb!important}
 
 /* Chart polish */
 .chart-wrap canvas{filter:drop-shadow(0 8px 18px rgba(0,0,0,.08))}
+
+
+/* Dark mode must also override a light system preference. */
+body.theme-dark{
+  --bg:#0a0f1a;--bg-soft:#0f1724;--surface:#111a28;--surface-2:#182235;--surface-3:#202c40;
+  --border:#263449;--border-light:#314159;--text:#f1f5f9;--muted:#94a3b8;--brand:#38bdf8;
+  --brand-strong:#0ea5e9;--success:#34d399;--danger:#fb7185;--warning:#fbbf24;
+  --shadow:0 10px 30px rgba(0,0,0,.20);
+  background:#0a0f1a!important;color:#f1f5f9!important;
+}
+body.theme-dark h1,body.theme-dark h2,body.theme-dark h3{color:#f1f5f9}
+body.theme-dark section,body.theme-dark article,body.theme-dark .rounded-2xl{border-color:#263449!important}
+body.theme-dark section,body.theme-dark article,body.theme-dark .grid>.rounded-2xl{background:#111a28!important}
+body.theme-dark article:hover,body.theme-dark .grid>.rounded-2xl:hover{background:#182235!important}
+body.theme-dark input,body.theme-dark select,body.theme-dark textarea{background:#0d1522!important;color:#f1f5f9!important;border-color:#263449!important}
+body.theme-dark thead,body.theme-dark .bg-slate-800\\/50{background:#182235!important}
+body.theme-dark .bg-slate-900{background:#0a0f1a!important}
+body.theme-dark .bg-slate-800{background:#182235!important}
+body.theme-dark .bg-slate-800\\/40{background:rgba(24,34,53,.55)!important}
+body.theme-dark .border-slate-800,body.theme-dark .border-slate-700{border-color:#263449!important}
+body.theme-dark .dashboard-chart-card{background:linear-gradient(145deg,#111c2b,#0d1724)!important}
+body.theme-dark .dashboard-hero{background:linear-gradient(135deg,#0e1826,#0b1420)!important;border-color:#263449}
+body.theme-dark .dashboard-metric{background:linear-gradient(145deg,#111a28,#0f1724);border-color:#263449}
+body.theme-dark .portfolio-dashboard-card{background:linear-gradient(145deg,#111a28,#0f1724)!important;border-color:#263449!important}
+body.theme-dark .ai-chat-panel{background:linear-gradient(145deg,#121e30,#101927)!important;border-color:#2b3c54!important}
+body.theme-dark .ai-answer{background:#111c2b!important;border-color:#29445c!important}
+body.theme-dark .investment-results{background:#0e1827;border-color:#30445f}
+body.theme-dark .form-card{background:linear-gradient(145deg,#111a28,#0f1724)!important}
+body.theme-dark .form-secondary-button{background:#182235!important;color:#aebdcd}
+body.theme-dark .theme-toggle{background:#111a28!important;color:#f1f5f9!important;border-color:#263449!important}
+body.theme-dark .login-page{background:#07101d!important}
+body.theme-dark .login-card{background:linear-gradient(145deg,rgba(18,30,48,.96),rgba(11,21,35,.98));border-color:rgba(71,92,120,.55)}
+body.theme-dark .login-input-wrap input{background:#091421!important;color:#f1f5f9!important;border-color:#27384e!important}
+body.theme-dark .login-security{border-color:#1f3044;background:rgba(7,16,28,.5)}
