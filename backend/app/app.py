@@ -684,7 +684,7 @@ def index():
             priced_investments += 1
 
         gain = (value_display - cost_display) if value_display is not None else None
-        gain_pct = ((gain / cost) * 100) if gain is not None and cost else None
+        gain_pct = ((gain / cost_display) * 100) if gain is not None and cost_display else None
 
         investment_rows.append({
             "id": investment.id,
