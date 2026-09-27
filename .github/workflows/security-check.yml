@@ -1,0 +1,51 @@
+name: FINTRACK security smoke test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  security-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Compile Python
+        run: python -m compileall -q backend
+
+      - name: Smoke test security controls
+        env:
+          FINTRACK_SECRET_KEY: ci-only-secret-key-change-me-please-1234567890
+          FINTRACK_TRUSTED_HOSTS: localhost,127.0.0.1
+        run: |
+          python - <<'PY'
+          import re
+          from backend.app.app import app
+
+          app.config["TESTING"] = True
+          client = app.test_client()
+
+          response = client.get("/login", headers={"Host": "localhost"})
+          assert response.status_code == 200
+          assert response.headers["X-Content-Type-Options"] == "nosniff"
+          assert response.headers["X-Frame-Options"] == "DENY"
+          assert "Content-Security-Policy" in response.headers
+          assert "nonce-" in response.headers["Content-Security-Policy"]
+
+          # Every state-changing form must be protected against CSRF.
+          blocked = client.post("/login", data={"username": "test", "password": "wrong"}, headers={"Host": "localhost"})
+          assert blocked.status_code == 400
+
+          # Host header validation must reject an unexpected host.
+          rejected = client.get("/login", headers={"Host": "evil.example"})
+          assert rejected.status_code == 400
+
+          print("FINTRACK security smoke test passed")
+          PY
