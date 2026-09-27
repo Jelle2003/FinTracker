@@ -1829,3 +1829,46 @@ body.theme-light .module-hero,body.theme-light .module-card,body.theme-light .da
   .primary-nav > a,.nav-dropdown > summary{min-height:36px;height:36px}
   .nav-logout{min-height:36px;height:36px}
 }
+
+
+/* FINTRACK INVESTING 3.1 — contained forms + ticker guidance */
+.investment-add-card{min-width:0;overflow:hidden}
+.investment-add-card form{min-width:0}
+.investment-form-grid{min-width:0}
+.investment-form-grid label{min-width:0}
+.investment-form-grid input,.investment-form-grid select{width:100%;min-width:0}
+.investment-submit{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px}
+.investment-events-card{min-width:0;overflow:hidden}
+.investment-event-form{grid-template-columns:repeat(4,minmax(0,1fr));align-items:start}
+.investment-event-field{min-width:0;display:flex;flex-direction:column;gap:5px}
+.investment-event-field label{font-size:.65rem;font-weight:750;color:#aab9c9}
+.investment-event-field input,.investment-event-field select{width:100%;min-width:0;box-sizing:border-box}
+.investment-event-field small{min-height:28px;color:#607287;font-size:.59rem;line-height:1.35}
+.investment-event-symbol-wrap{position:relative;min-width:0}
+.investment-event-symbol-results{position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:40;border:1px solid #30445f;border-radius:11px;background:#0e1827;box-shadow:0 18px 45px rgba(0,0,0,.35);overflow:hidden}
+.investment-event-result{width:100%;display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;border:0;border-bottom:1px solid #1f3044;background:transparent;color:#e2e8f0;cursor:pointer}
+.investment-event-result:last-child{border-bottom:0}
+.investment-event-result:hover,.investment-event-result:focus{background:#17283d;outline:none}
+.investment-event-result strong{font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.investment-event-result small{color:#64748b;font-size:.58rem}
+.investment-event-no-results{padding:10px;color:#94a3b8;font-size:.64rem}
+.investment-event-form>button{width:100%;min-width:0;align-self:start;margin-top:0}
+@media(min-width:901px){
+ .investment-event-form>button{margin-top:0;min-height:38px}
+}
+@media(max-width:900px){
+ .investment-event-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .investment-event-symbol-field{grid-column:1/-1}
+ .investment-event-form>button{grid-column:1/-1}
+}
+@media(max-width:600px){
+ .investment-event-form{grid-template-columns:1fr}
+ .investment-event-symbol-field{grid-column:auto}
+ .investment-event-form>button{grid-column:auto}
+ .investment-event-field small{min-height:0}
+}
+body.theme-light .investment-event-field label{color:#475569}
+body.theme-light .investment-event-field small{color:#64748b}
+body.theme-light .investment-event-symbol-results{background:#fff;border-color:#d5dee8;box-shadow:0 18px 40px rgba(15,23,42,.12)}
+body.theme-light .investment-event-result{color:#334155;border-bottom-color:#e2e8f0}
+body.theme-light .investment-event-result:hover,body.theme-light .investment-event-result:focus{background:#f1f5f9}
