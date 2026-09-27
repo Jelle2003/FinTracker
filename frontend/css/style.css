@@ -835,3 +835,25 @@ footer{
     background: none;
     border: 0;
 }
+
+
+/* Desktop layout refinements */
+@media (min-width: 801px){
+  .mx-auto.max-w-6xl{max-width:1280px!important}
+  .site-header{padding-bottom:14px!important;margin-bottom:22px!important}
+  .site-nav{gap:12px}
+  .primary-nav{gap:3px;flex-wrap:nowrap}
+  .primary-nav a{padding:7px 9px!important;font-size:.78rem}
+  .nav-group{gap:2px;padding-left:6px}
+  .nav-group-label{font-size:.58rem}
+  main.mx-auto{padding-top:24px!important;padding-bottom:36px!important}
+  .dashboard-hero{min-height:270px;padding:32px 34px}
+  .dashboard-hero h1{font-size:2.35rem}
+}
+
+@media (min-width: 801px) and (max-width: 1250px){
+  .primary-nav a{padding:7px 7px!important;font-size:.72rem}
+  .nav-group-label{display:none}
+  .nav-group{padding-left:3px}
+  .brand-mark{font-size:1.05rem}
+}
