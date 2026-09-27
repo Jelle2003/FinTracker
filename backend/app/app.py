@@ -1602,9 +1602,25 @@ def investing():
             total_value += value_display
         else:
             all_prices = False
-        rows.append({"holding": h, "cost": cost_display, "current_price": current_price,
-                     "value": value_display, "currency": quote["currency"] if quote else ""})
+        gain_pct = ((value_display - cost_display) / cost_display * 100) if value_display is not None and cost_display else None
+        rows.append({
+            "holding": h,
+            "cost": cost_display,
+            "value": value_display,
+            "current_price": current_price,
+            "currency": quote["currency"] if quote else "",
+            "gain_pct": gain_pct,
+        })
     gain = total_value - total_cost if holdings and all_prices else None
+
+    # Simple rules surface positions worth reviewing; they are not automatic buy/sell orders.
+    for row in rows:
+        row["review"] = None
+        if row["gain_pct"] is not None and row["gain_pct"] <= -15:
+            row["review"] = "Sterke daling: herbekijk de positie en de oorspronkelijke reden om te beleggen."
+        elif row["gain_pct"] is not None and row["gain_pct"] >= 30:
+            row["review"] = "Sterke stijging: controleer of de positie nog past binnen je gewenste spreiding en risico."
+
     return render_template("investing.html", rows=rows, total_cost=total_cost,
                            total_value=total_value, gain=gain)
 
