@@ -76,10 +76,7 @@
 <script nonce="{{ g.csp_nonce }}">
 const monthLabels={{(month_labels or [])|tojson}};
 const monthValues={{(month_values or [])|tojson}};
-new Chart(document.getElementById("incomeChart").getContext("2d"),{
-type:"bar",data:{labels:monthLabels,datasets:[{label:"Income",data:monthValues}]},
-options:{responsive:true,plugins:{legend:{labels:{color:"#cbd5e1"}}},scales:{x:{ticks:{color:"#cbd5e1"},grid:{color:"#334155"}},y:{ticks:{color:"#cbd5e1"},grid:{color:"#334155"}}}}
-});
+const drawIncomeChart=()=>{const light=document.documentElement.dataset.theme==="light",text=light?"#475569":"#cbd5e1",grid=light?"#e2e8f0":"#334155",el=document.getElementById("incomeChart");if(window.incomeChart)window.incomeChart.destroy();window.incomeChart=new Chart(el.getContext("2d"),{type:"bar",data:{labels:monthLabels,datasets:[{label:"Inkomsten",data:monthValues,backgroundColor:light?"rgba(2,132,199,.72)":"rgba(56,189,248,.72)",borderColor:light?"#0284c7":"#38bdf8",borderWidth:1.5,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"top",align:"start",labels:{color:text,usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:{padding:11,cornerRadius:10}},scales:{x:{border:{display:false},ticks:{color:text},grid:{display:false}},y:{beginAtZero:true,border:{display:false},ticks:{color:text},grid:{color:grid}}}}})};drawIncomeChart();window.addEventListener("fintrack-theme-change",drawIncomeChart);
 </script>
 </main>
 <script nonce="{{ g.csp_nonce }}">
