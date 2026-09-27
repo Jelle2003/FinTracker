@@ -7,121 +7,84 @@
     <title>Account · FINTRACK</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="login-page">
-<button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema">
-  <span class="theme-toggle-icon" aria-hidden="true">☾</span>
-  <span class="theme-toggle-label">Donker</span>
-</button>
-    <div class="login-shell">
-        <div class="login-brand" aria-label="FINTRACK">
-            <div class="login-logo">F</div>
-            <div>
-                <div class="login-wordmark"><span>FIN</span>TRACK</div>
-                <div class="login-brand-subtitle">Personal finance, simplified.</div>
-            </div>
+<body class="account-page">
+    <header class="site-header">
+        <div class="site-nav">
+            <a href="{{url_for('index')}}" class="brand-mark" aria-label="FINTRACK home">
+                <span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M8 21.5 13 16l4 3 7-8" fill="none" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10h8" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round"/></svg></span>
+                <span class="brand-wordmark"><b>FIN</b>TRACK</span>
+            </a>
+            <button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button>
+            <button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button>
+            <nav id="primary-nav" class="primary-nav" aria-label="Hoofdnavigatie">
+                <a href="{{url_for('index')}}">Overzicht</a>
+                <details class="nav-dropdown"><summary><span>Financiën</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-dropdown-menu"><a href="{{url_for('income')}}"><span class="nav-dropdown-icon income-icon">↗</span><span><b>Inkomsten</b><small>Geld dat binnenkomt</small></span></a><a href="{{url_for('expenses')}}"><span class="nav-dropdown-icon expense-icon">↘</span><span><b>Uitgaven</b><small>Geld dat je besteedt</small></span></a></div></details>
+                <details class="nav-dropdown"><summary><span>Vermogen</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-dropdown-menu"><a href="{{url_for('investing')}}"><span class="nav-dropdown-icon invest-icon">↗</span><span><b>Beleggen</b><small>Je portefeuille & posities</small></span></a><a href="{{url_for('market')}}"><span class="nav-dropdown-icon market-icon">◌</span><span><b>Markt & Nieuws</b><small>Koersen en financieel nieuws</small></span></a></div></details>
+                <a href="{{url_for('ai_investor')}}"><span class="nav-ai-dot" aria-hidden="true">✦</span> AI Adviseur</a>
+                <details class="nav-dropdown nav-account-dropdown" open><summary class="is-active"><span>Account</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="nav-dropdown-menu nav-dropdown-menu-right"><a href="{{url_for('account')}}" class="is-active"><span class="nav-dropdown-icon account-icon">◎</span><span><b>Account</b><small>Profiel en beveiliging</small></span></a>{% if current_user.is_admin %}<a href="{{url_for('admin')}}" class="admin-dropdown-item"><span class="nav-dropdown-icon admin-icon">◆</span><span><b>Admin</b><small>Gebruikers en beheer</small></span></a>{% endif %}</div></details>
+                <form method="post" action="{{url_for('logout')}}" class="nav-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-logout"><span aria-hidden="true">↪</span> Afmelden</button></form>
+            </nav>
         </div>
+    </header>
 
-        <main class="login-card" aria-labelledby="account-title">
-            <div class="login-card-top">
-                <div>
-                    <p class="login-eyebrow">ACCOUNT</p>
-                    <h1 id="account-title">Beveilig je account</h1>
-                    <p class="login-description">Wijzig hier je wachtwoord. Gebruik bij voorkeur een uniek wachtwoord dat je nergens anders gebruikt.</p>
-                </div>
-                <div class="login-shield" aria-hidden="true">✓</div>
+    <main class="account-shell">
+        <section class="account-hero">
+            <div class="account-avatar avatar-{{ user.avatar_color or 'blue' }}">{{ (user.display_name or user.username)[0]|upper }}</div>
+            <div>
+                <p class="account-eyebrow">MIJN ACCOUNT</p>
+                <h1>{{ user.display_name or user.username }}</h1>
+                <p>Personaliseer hoe FINTRACK eruitziet en hoe jouw profiel wordt weergegeven.</p>
             </div>
+        </section>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="login-messages" aria-live="polite">
-                        {% for category, message in messages %}
-                            <div class="login-message {% if category == 'success' %}is-success{% else %}is-error{% endif %}">
-                                <span class="login-message-icon" aria-hidden="true">{% if category == 'success' %}✓{% else %}!{% endif %}</span>
-                                <span>{{ message }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-
-            <form method="post" class="login-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="login-field">
-                    <label for="current_password">Huidig wachtwoord</label>
-                    <div class="login-input-wrap">
-                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
-                    </div>
-                </div>
-
-                <div class="login-field">
-                    <label for="new_password">Nieuw wachtwoord</label>
-                    <div class="login-input-wrap">
-                        <input type="password" id="new_password" name="new_password" required minlength="12" maxlength="128" autocomplete="new-password">
-                    </div>
-                </div>
-
-                <div class="login-field">
-                    <label for="confirm_password">Herhaal nieuw wachtwoord</label>
-                    <div class="login-input-wrap">
-                        <input type="password" id="confirm_password" name="confirm_password" required minlength="12" maxlength="128" autocomplete="new-password">
-                    </div>
-                </div>
-
-                <button type="submit" class="login-submit">
-                    <span>Wachtwoord wijzigen</span>
-                    <span aria-hidden="true">→</span>
-                </button>
-                <p id="password-match" class="register-password-hint" aria-live="polite"></p>
-            </form>
-
-            <div class="login-security">
-                <span class="login-security-icon" aria-hidden="true">✓</span>
-                <div>
-                    <strong>Extra bescherming actief</strong>
-                    <span>FINTRACK gebruikt CSRF-bescherming, beveiligde sessiecookies en rate limiting.</span>
-                </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="account-messages" aria-live="polite">
+                {% for category, message in messages %}
+                <div class="login-message {% if category == 'success' %}is-success{% endif %}"><span class="login-message-icon">{% if category == 'success' %}✓{% else %}!{% endif %}</span><span>{{ message }}</span></div>
+                {% endfor %}
             </div>
+            {% endif %}
+        {% endwith %}
 
-            <p class="login-description" style="text-align:center;margin-top:20px">
-                <a href="{{ url_for('index') }}">← Terug naar dashboard</a>
-            </p>
-        </main>
+        <div class="account-grid">
+            <section class="account-card account-profile-card">
+                <div class="account-card-heading"><div><span class="account-section-kicker">PROFIEL</span><h2>Jouw persoonlijke gegevens</h2><p>Deze gegevens bepalen hoe je account binnen FINTRACK wordt weergegeven.</p></div><span class="account-card-icon">◎</span></div>
+                <form method="post" class="account-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="profile">
+                    <div class="account-form-grid">
+                        <div class="account-field account-field-full"><label for="username">Gebruikersnaam</label><input id="username" value="{{ user.username }}" disabled><small>Je gebruikersnaam kan momenteel niet worden gewijzigd.</small></div>
+                        <div class="account-field"><label for="display_name">Weergavenaam</label><input id="display_name" name="display_name" maxlength="80" value="{{ user.display_name or '' }}" placeholder="Bijv. Jelle"></div>
+                        <div class="account-field"><label for="email">E-mailadres</label><input id="email" name="email" type="email" maxlength="254" value="{{ user.email or '' }}" placeholder="jij@example.com"></div>
+                        <div class="account-field"><label for="currency">Valuta</label><select id="currency" name="currency"><option value="EUR" {% if user.currency == 'EUR' %}selected{% endif %}>€ Euro (EUR)</option><option value="USD" {% if user.currency == 'USD' %}selected{% endif %}>$ US dollar (USD)</option><option value="GBP" {% if user.currency == 'GBP' %}selected{% endif %}>£ Britse pond (GBP)</option></select></div>
+                        <div class="account-field"><label>Profielkleur</label><div class="avatar-options">{% for color, label in [('blue','Blauw'),('purple','Paars'),('green','Groen'),('orange','Oranje'),('pink','Roze')] %}<label class="avatar-option"><input type="radio" name="avatar_color" value="{{ color }}" {% if (user.avatar_color or 'blue') == color %}checked{% endif %}><span class="avatar-swatch avatar-{{ color }}">{{ (user.display_name or user.username)[0]|upper }}</span><span>{{ label }}</span></label>{% endfor %}</div></div>
+                    </div>
+                    <button type="submit" class="account-save">Profiel opslaan <span>→</span></button>
+                </form>
+            </section>
 
-        <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
-    </div>
+            <section class="account-card">
+                <div class="account-card-heading"><div><span class="account-section-kicker">BEVEILIGING</span><h2>Wachtwoord</h2><p>Houd je account veilig met een uniek wachtwoord.</p></div><span class="account-card-icon">✓</span></div>
+                <form method="post" class="account-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="password">
+                    <div class="account-field"><label for="current_password">Huidig wachtwoord</label><input type="password" id="current_password" name="current_password" required autocomplete="current-password"></div>
+                    <div class="account-field"><label for="new_password">Nieuw wachtwoord</label><input type="password" id="new_password" name="new_password" required minlength="12" maxlength="128" autocomplete="new-password"><small>Minimaal 12 tekens.</small></div>
+                    <div class="account-field"><label for="confirm_password">Herhaal nieuw wachtwoord</label><input type="password" id="confirm_password" name="confirm_password" required minlength="12" maxlength="128" autocomplete="new-password"></div>
+                    <button type="submit" class="account-save account-save-secondary">Wachtwoord wijzigen <span>→</span></button>
+                </form>
+            </section>
 
-    <script nonce="{{ g.csp_nonce }}">
-        (() => {
-            const form = document.querySelector(".login-form");
-            const password = document.getElementById("new_password");
-            const confirm = document.getElementById("confirm_password");
-            const hint = document.getElementById("password-match");
-            if (!form || !password || !confirm || !hint) return;
+            <section class="account-card account-preferences">
+                <div class="account-card-heading"><div><span class="account-section-kicker">VOORKEUREN</span><h2>Jouw FINTRACK-ervaring</h2><p>Je thema wordt lokaal op dit apparaat onthouden.</p></div><span class="account-card-icon">✦</span></div>
+                <div class="account-preference-row"><div><b>Weergave</b><span>Wissel tussen licht en donker via de knop rechtsboven.</span></div><button type="button" class="account-theme-action" id="accountThemeButton">Thema wijzigen</button></div>
+                <div class="account-preference-row"><div><b>Accountstatus</b><span>{% if user.is_admin %}Je hebt administratorrechten.{% else %}Standaard FINTRACK-account.{% endif %}</span></div><span class="account-status {% if user.is_admin %}is-admin{% endif %}">{% if user.is_admin %}ADMIN{% else %}ACTIEF{% endif %}</span></div>
+            </section>
+        </div>
+    </main>
 
-            const validate = () => {
-                if (!confirm.value) {
-                    hint.textContent = "";
-                    confirm.setCustomValidity("");
-                    return;
-                }
-                const matches = password.value === confirm.value;
-                hint.textContent = matches ? "✓ Wachtwoorden komen overeen." : "De wachtwoorden komen niet overeen.";
-                hint.classList.toggle("is-valid", matches);
-                hint.classList.toggle("is-invalid", !matches);
-                confirm.setCustomValidity(matches ? "" : "De wachtwoorden komen niet overeen.");
-            };
-
-            password.addEventListener("input", validate);
-            confirm.addEventListener("input", validate);
-            form.addEventListener("submit", () => validate());
-        })();
-    </script>
 <script nonce="{{ g.csp_nonce }}">
-/* FINTRACK_THEME */
-(()=>{const key="fintrack-theme",root=document.documentElement,button=document.getElementById("themeToggle");
-const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
-const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema";button.setAttribute("aria-label",button.title)};localStorage.setItem(key,mode);window.dispatchEvent(new CustomEvent("fintrack-theme-change",{detail:{mode}}))};
-apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));
-})();
-</script></body>
+(()=>{const root=document.documentElement,button=document.getElementById("themeToggle"),accountButton=document.getElementById("accountThemeButton"),key="fintrack-theme";const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");[button,accountButton].forEach(()=>{});if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema"}localStorage.setItem(key,mode)};const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));accountButton?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));})();
+(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open)});nav.querySelectorAll(".nav-dropdown-menu a").forEach(a=>a.addEventListener("click",()=>{const d=a.closest("details");if(d)d.removeAttribute("open");}));})();
+</script>
+</body>
 </html>
