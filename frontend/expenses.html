@@ -132,7 +132,7 @@ function drawExpenseChart(){
     barTitle.textContent=expenseLabels[i]+": {{ currency_symbol }}"+Number(value).toFixed(2);bar.appendChild(barTitle);svg.appendChild(bar);
 
     const amount=document.createElementNS("http://www.w3.org/2000/svg","text");
-    amount.textContent="€"+Number(value).toFixed(2);
+    amount.textContent="{{ currency_symbol }}"+Number(value).toFixed(2);
     amount.setAttribute("x",Math.min(left+width+8,w-4));amount.setAttribute("y",y+17);
     amount.setAttribute("fill",text);amount.setAttribute("font-size",mobile?"9":"12");amount.setAttribute("font-weight","700");
     svg.appendChild(amount);
