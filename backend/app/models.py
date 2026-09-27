@@ -15,8 +15,6 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(80), nullable=True)
     email = db.Column(db.String(254), nullable=True)
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
-    sector = db.Column(db.String(60), nullable=True)
-    region = db.Column(db.String(40), nullable=True)
     avatar_color = db.Column(db.String(20), nullable=False, default="blue", server_default="blue")
     risk_profile = db.Column(db.String(20), nullable=False, default="balanced", server_default="balanced")
     investment_horizon = db.Column(db.String(20), nullable=False, default="medium", server_default="medium")
@@ -65,6 +63,8 @@ class Investment(db.Model):
     quantity = db.Column(db.Float, nullable=False, default=0)
     average_price = db.Column(db.Float, nullable=False, default=0)
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
+    sector = db.Column(db.String(60), nullable=True)
+    region = db.Column(db.String(40), nullable=True)
     sector = db.Column(db.String(60), nullable=True)
     region = db.Column(db.String(40), nullable=True)
 
