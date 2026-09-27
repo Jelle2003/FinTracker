@@ -6,6 +6,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 from .database import db
@@ -122,7 +123,7 @@ def register():
 
         if len(username) < 3 or len(username) > 80:
             flash("Kies een gebruikersnaam van 3 tot 80 tekens.", "error")
-            return render_template("register.html")
+            return render_template("register.html", username=username)
         if len(password) < 10:
             flash("Gebruik een wachtwoord van minstens 10 tekens.", "error")
             return render_template("register.html")
@@ -136,7 +137,13 @@ def register():
         user = User(username=username)
         user.set_password(password)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Deze gebruikersnaam is al in gebruik. Kies een andere.", "error")
+            return render_template("register.html", username=username)
+
         login_user(user)
         flash("Je account is aangemaakt. Welkom bij FINTRACK!", "success")
         return redirect(url_for("index"))
