@@ -23,6 +23,8 @@
           <a href="{{url_for('market')}}" class="{% if request.endpoint == 'market' %}is-active{% endif %}"><span class="nav-dropdown-icon market-icon">◌</span><span><b>Markt & Nieuws</b><small>Koersen en financieel nieuws</small></span></a>
         </div>
       </details>
+      <a href="{{url_for('transactions')}}" class="{% if request.endpoint == 'transactions' %}is-active{% endif %}">↔ Transacties</a>
+      <a href="{{url_for('notifications')}}" class="{% if request.endpoint == 'notifications' %}is-active{% endif %}">♢ Alerts</a>
       <a href="{{url_for('ai_investor')}}" class="{% if request.endpoint == 'ai_investor' %}is-active{% endif %}"><span class="nav-ai-dot" aria-hidden="true">✦</span> AI Adviseur</a>
       <details class="nav-dropdown nav-account-dropdown">
         <summary class="{% if request.endpoint in ['account','admin'] %}is-active{% endif %}"><span>Account</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary>
