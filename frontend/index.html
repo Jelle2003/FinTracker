@@ -196,10 +196,10 @@
     <div class="dashboard-card-heading"><div><span class="dashboard-section-eyebrow">ACTIVITEIT</span><h2>Recente transacties</h2></div></div>
     <div class="space-y-3 dashboard-transactions">
       {% for item in recent_incomes %}
-      <div class="transaction-row"><div class="transaction-icon income">+</div><div class="transaction-copy"><p>{{item.description}} <span>· Inkomst</span></p><small>{{item.start_date.strftime("%d-%m-%Y")}}</small></div><strong class="positive">+{{ currency_symbol }}{{'%.2f'|format(item.amount)}}</strong></div>
+      <div class="transaction-row"><div class="transaction-icon income">+</div><div class="transaction-copy"><p>{{item.description}} <span>· Inkomst</span></p><small>{{item.start_date.strftime("%d-%m-%Y")}}</small></div><strong class="positive">+{{ money(item.amount) }}</strong></div>
       {% endfor %}
       {% for item in recent_expenses %}
-      <div class="transaction-row"><div class="transaction-icon expense">−</div><div class="transaction-copy"><p>{{item.description}} <span>· Uitgave</span></p><small>{{item.date.strftime("%d-%m-%Y")}}</small></div><strong class="negative">−{{ currency_symbol }}{{'%.2f'|format(item.amount)}}</strong></div>
+      <div class="transaction-row"><div class="transaction-icon expense">−</div><div class="transaction-copy"><p>{{item.description}} <span>· Uitgave</span></p><small>{{item.date.strftime("%d-%m-%Y")}}</small></div><strong class="negative">−{{ money(item.amount) }}</strong></div>
       {% endfor %}
       {% if not recent_incomes and not recent_expenses %}<div class="dashboard-empty-chart"><span>＋</span><p>Nog geen transacties geregistreerd.</p></div>{% endif %}
     </div>
