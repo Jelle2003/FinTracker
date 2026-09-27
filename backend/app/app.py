@@ -599,8 +599,8 @@ def index():
 
     month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    income_values = [round(float(monthly_income.get(f"{m:02d}", 0) or 0), 2) for m in range(1, 13)]
-    expense_values = [round(float(monthly_expenses.get(f"{m:02d}", 0) or 0), 2) for m in range(1, 13)]
+    income_values = [money_value(monthly_income.get(f"{m:02d}", 0)) for m in range(1, 13)]
+    expense_values = [money_value(monthly_expenses.get(f"{m:02d}", 0)) for m in range(1, 13)]
 
     category_rows = db.session.query(
         Expense.category, func.sum(Expense.amount)
@@ -630,13 +630,15 @@ def index():
 
         current_price = quote["price"] if quote else None
         current_value = quantity * current_price if current_price is not None else None
+        cost_display = money_value(cost, investment.currency)
+        value_display = money_value(current_value, quote["currency"]) if current_value is not None and quote else None
 
-        investment_total_cost += cost
-        if current_value is not None:
-            investment_market_value += current_value
+        investment_total_cost += cost_display
+        if value_display is not None:
+            investment_market_value += value_display
             priced_investments += 1
 
-        gain = (current_value - cost) if current_value is not None else None
+        gain = (value_display - cost_display) if value_display is not None else None
         gain_pct = ((gain / cost) * 100) if gain is not None and cost else None
 
         investment_rows.append({
@@ -646,9 +648,9 @@ def index():
             "asset_type": investment.asset_type,
             "quantity": quantity,
             "average_price": average_price,
-            "cost": cost,
+            "cost": cost_display,
             "current_price": current_price,
-            "current_value": current_value,
+            "current_value": value_display,
             "gain": gain,
             "gain_pct": gain_pct,
             "currency": quote.get("currency", "") if quote else "",
@@ -662,8 +664,8 @@ def index():
     # Voor de dashboardweergave: grootste posities eerst.
     investment_rows.sort(key=lambda item: (item["current_value"] if item["current_value"] is not None else item["cost"]), reverse=True)
 
-    income_total = round(float(income_total), 2)
-    expense_total = round(float(expense_total), 2)
+    income_total = money_value(income_total)
+    expense_total = money_value(expense_total)
     balance = round(income_total - expense_total, 2)
     savings_rate = round((balance / income_total) * 100, 1) if income_total else 0
 
@@ -679,7 +681,7 @@ def index():
         month_names=month_names, income_values=income_values,
         expense_values=expense_values,
         category_labels=[c for c, _ in category_rows],
-        category_values=[round(float(v or 0), 2) for _, v in category_rows],
+        category_values=[money_value(v) for _, v in category_rows],
         recent_expenses=recent_expenses, recent_incomes=recent_incomes,
         investment_rows=investment_rows,
         investment_total_cost=investment_total_cost,
