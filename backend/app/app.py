@@ -1739,10 +1739,27 @@ def ai_investor():
             news = market_news(question)[:5]
             goals = owned_query(SavingsGoal).order_by(SavingsGoal.deadline.asc()).limit(10).all()
 
+            current_year = date.today().year
+            year_start = date(current_year, 1, 1)
+            year_end = date(current_year, 12, 31)
+            annual_income = db.session.query(func.sum(Income.amount)).filter(
+                Income.user_id == current_user.id,
+                Income.start_date >= year_start,
+                Income.start_date <= year_end,
+            ).scalar() or 0
+            annual_expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.user_id == current_user.id,
+                Expense.date >= year_start,
+                Expense.date <= year_end,
+            ).scalar() or 0
+
             financial_context = {
                 "currency": current_user.currency,
                 "risk_profile": current_user.risk_profile,
                 "investment_horizon": current_user.investment_horizon,
+                "annual_income_eur": annual_income,
+                "annual_expenses_eur": annual_expenses,
+                "annual_surplus_eur": annual_income - annual_expenses,
                 "monthly_investment_budget": current_user.monthly_investment_budget,
                 "emergency_fund_target": current_user.emergency_fund_target,
                 "savings_goals": [
