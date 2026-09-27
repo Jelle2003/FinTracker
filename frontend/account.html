@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f7fb">
+    <title>Account · FINTRACK</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-shell">
+        <div class="login-brand" aria-label="FINTRACK">
+            <div class="login-logo">F</div>
+            <div>
+                <div class="login-wordmark"><span>FIN</span>TRACK</div>
+                <div class="login-brand-subtitle">Personal finance, simplified.</div>
+            </div>
+        </div>
+
+        <main class="login-card" aria-labelledby="account-title">
+            <div class="login-card-top">
+                <div>
+                    <p class="login-eyebrow">ACCOUNT</p>
+                    <h1 id="account-title">Beveilig je account</h1>
+                    <p class="login-description">Wijzig hier je wachtwoord. Gebruik bij voorkeur een uniek wachtwoord dat je nergens anders gebruikt.</p>
+                </div>
+                <div class="login-shield" aria-hidden="true">✓</div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="login-messages" aria-live="polite">
+                        {% for category, message in messages %}
+                            <div class="login-message {% if category == 'success' %}is-success{% else %}is-error{% endif %}">
+                                <span class="login-message-icon" aria-hidden="true">{% if category == 'success' %}✓{% else %}!{% endif %}</span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="post" class="login-form">
+                {{ csrf_token() }}
+                <div class="login-field">
+                    <label for="current_password">Huidig wachtwoord</label>
+                    <div class="login-input-wrap">
+                        <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="login-field">
+                    <label for="new_password">Nieuw wachtwoord</label>
+                    <div class="login-input-wrap">
+                        <input type="password" id="new_password" name="new_password" required minlength="12" maxlength="128" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="login-field">
+                    <label for="confirm_password">Herhaal nieuw wachtwoord</label>
+                    <div class="login-input-wrap">
+                        <input type="password" id="confirm_password" name="confirm_password" required minlength="12" maxlength="128" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="login-submit">
+                    <span>Wachtwoord wijzigen</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+                <p id="password-match" class="register-password-hint" aria-live="polite"></p>
+            </form>
+
+            <div class="login-security">
+                <span class="login-security-icon" aria-hidden="true">✓</span>
+                <div>
+                    <strong>Extra bescherming actief</strong>
+                    <span>FINTRACK gebruikt CSRF-bescherming, beveiligde sessiecookies en rate limiting.</span>
+                </div>
+            </div>
+
+            <p class="login-description" style="text-align:center;margin-top:20px">
+                <a href="{{ url_for('index') }}">← Terug naar dashboard</a>
+            </p>
+        </main>
+
+        <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
+    </div>
+
+    <script>
+        (() => {
+            const form = document.querySelector(".login-form");
+            const password = document.getElementById("new_password");
+            const confirm = document.getElementById("confirm_password");
+            const hint = document.getElementById("password-match");
+            if (!form || !password || !confirm || !hint) return;
+
+            const validate = () => {
+                if (!confirm.value) {
+                    hint.textContent = "";
+                    confirm.setCustomValidity("");
+                    return;
+                }
+                const matches = password.value === confirm.value;
+                hint.textContent = matches ? "✓ Wachtwoorden komen overeen." : "De wachtwoorden komen niet overeen.";
+                hint.classList.toggle("is-valid", matches);
+                hint.classList.toggle("is-invalid", !matches);
+                confirm.setCustomValidity(matches ? "" : "De wachtwoorden komen niet overeen.");
+            };
+
+            password.addEventListener("input", validate);
+            confirm.addEventListener("input", validate);
+            form.addEventListener("submit", () => validate());
+        })();
+    </script>
+</body>
+</html>
