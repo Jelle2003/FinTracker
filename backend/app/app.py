@@ -725,6 +725,44 @@ def index():
         SavingsGoal.id.desc()
     ).limit(3).all()
 
+    # FINTRACK 2.0: connect cashflow, goals and investments into one planning layer.
+    financial_insights = []
+    if current_user.emergency_fund_target > 0 and balance < current_user.emergency_fund_target:
+        financial_insights.append(
+            f"Je gewenste noodbuffer is {money(current_user.emergency_fund_target)}. "
+            "Controleer eerst of je kortetermijnbuffer voldoende is voordat je extra risico neemt."
+        )
+
+    if current_user.monthly_investment_budget > 0:
+        financial_insights.append(
+            f"Je ingestelde beleggingsbudget is {money(current_user.monthly_investment_budget)} per maand. "
+            "FINTRACK gebruikt dit als richtpunt voor toekomstige inleg."
+        )
+
+    if investment_rows and investment_market_value > 0:
+        top = investment_rows[0]
+        top_share = (top["current_value"] / investment_market_value * 100) if top["current_value"] is not None else 0
+        if top_share >= 25:
+            financial_insights.append(
+                f"{top['symbol']} vertegenwoordigt ongeveer {top_share:.0f}% van je portefeuille. "
+                "Dat is een concentratie die je bewust moet opvolgen."
+            )
+
+    for goal in dashboard_goals:
+        if goal.deadline and goal.current_amount < goal.target_amount:
+            days_left = (goal.deadline - date.today()).days
+            if 0 <= days_left <= 365:
+                financial_insights.append(
+                    f"'{goal.name}' heeft nog {days_left} dagen tot de deadline. "
+                    "Een korte horizon is minder geschikt om volledig afhankelijk te zijn van aandelenkoersen."
+                )
+                break
+
+    if not financial_insights:
+        financial_insights.append(
+            "Voeg je risicoprofiel, noodbuffer en beleggingsbudget toe bij Account om FINTRACK persoonlijker te laten analyseren."
+        )
+
     return render_template(
         "index.html", selected_year=selected_year, years=years,
         income_total=income_total, expense_total=expense_total,
@@ -734,6 +772,7 @@ def index():
         category_labels=[c for c, _ in category_rows],
         category_values=[money_value(v) for _, v in category_rows],
         recent_expenses=recent_expenses, recent_incomes=recent_incomes,
+        financial_insights=financial_insights,
         investment_rows=investment_rows,
         investment_total_cost=investment_total_cost,
         investment_market_value=investment_market_value,
