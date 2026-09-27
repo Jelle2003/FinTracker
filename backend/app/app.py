@@ -715,7 +715,7 @@ def expenses():
     if selected_category:
         q = q.filter(Expense.user_id == current_user.id, Expense.category == selected_category)
     expenses = q.order_by(Expense.date.desc(), Expense.id.desc()).all()
-    total = round(sum(e.amount for e in expenses), 2)
+    total = money_value(sum(e.amount for e in expenses))
 
     cat_q = db.session.query(Expense.category, func.sum(Expense.amount)).filter(Expense.user_id == current_user.id)
     day_q = db.session.query(Expense.date, func.sum(Expense.amount)).filter(Expense.user_id == current_user.id)
@@ -728,8 +728,8 @@ def expenses():
     return render_template("expenses.html", categories=CATEGORIES,
         today=date.today().isoformat(), expenses=expenses, total=total,
         start_str=start_str, end_str=end_str, selected_category=selected_category,
-        cat_labels=[c for c, _ in cat_rows], cat_values=[round(float(v or 0), 2) for _, v in cat_rows],
-        day_labels=[d.isoformat() for d, _ in day_rows], day_values=[round(float(v or 0), 2) for _, v in day_rows])
+        cat_labels=[c for c, _ in cat_rows], cat_values=[money_value(v) for _, v in cat_rows],
+        day_labels=[d.isoformat() for d, _ in day_rows], day_values=[money_value(v) for _, v in day_rows])
 
 
 # ============================================================
@@ -941,7 +941,7 @@ def income():
         Income.id.desc()
     ).all()
 
-    total = round(sum(i.amount for i in incomes), 2)
+    total = money_value(sum(i.amount for i in incomes))
 
     month_expression = func.strftime("%Y-%m", Income.start_date)
     month_rows = db.session.query(
@@ -954,7 +954,7 @@ def income():
     ).all()
 
     month_labels = [month for month, _ in month_rows]
-    month_values = [round(float(amount or 0), 2) for _, amount in month_rows]
+    month_values = [money_value(amount) for _, amount in month_rows]
 
     return render_template(
         "income.html",
@@ -1399,13 +1399,15 @@ def investing():
         quote = market_price(h.symbol)
         current_price = quote["price"] if quote else None
         value = h.quantity * current_price if current_price is not None else None
-        total_cost += cost
-        if value is not None:
-            total_value += value
+        cost_display = money_value(cost, h.currency)
+        value_display = money_value(value, quote["currency"]) if value is not None and quote else None
+        total_cost += cost_display
+        if value_display is not None:
+            total_value += value_display
         else:
             all_prices = False
-        rows.append({"holding": h, "cost": cost, "current_price": current_price,
-                     "value": value, "currency": quote["currency"] if quote else ""})
+        rows.append({"holding": h, "cost": cost_display, "current_price": current_price,
+                     "value": value_display, "currency": quote["currency"] if quote else ""})
     gain = total_value - total_cost if holdings and all_prices else None
     return render_template("investing.html", rows=rows, total_cost=total_cost,
                            total_value=total_value, gain=gain)
