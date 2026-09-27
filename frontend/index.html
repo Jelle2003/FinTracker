@@ -21,6 +21,7 @@
     <button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button>
     <nav id="primary-nav" class="primary-nav" aria-label="Hoofdnavigatie">
       <a href="{{url_for('index')}}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">Overzicht</a>
+      <a href="{{url_for('goals')}}" class="{% if request.endpoint == 'goals' %}is-active{% endif %}">Spaardoelen</a>
 
       <details class="nav-dropdown">
         <summary class="{% if request.endpoint in ['income','expenses'] %}is-active{% endif %}">
@@ -125,6 +126,45 @@
   <div class="dashboard-metric"><div class="metric-icon metric-balance">{{ currency_symbol }}</div><p>Netto over</p><strong class="{% if balance>=0 %}positive{% else %}negative{% endif %}">{{ currency_symbol }}{{'%.2f'|format(balance)}}</strong><span>Inkomsten − uitgaven</span></div>
   <div class="dashboard-metric"><div class="metric-icon metric-saving">%</div><p>Spaarpercentage</p><strong>{{'%.1f'|format(savings_rate)}}%</strong><span>Van je inkomsten</span></div>
 </div>
+
+<section class="dashboard-goals-card">
+  <div class="dashboard-goals-head">
+    <div>
+      <div class="dashboard-section-eyebrow">SPAARDOELEN</div>
+      <h2>Waar werk je naartoe?</h2>
+      <p>Houd je doelen bij en zie meteen hoeveel je nog nodig hebt.</p>
+    </div>
+    <a href="{{url_for('goals')}}" class="portfolio-open-link">Alle doelen <span>→</span></a>
+  </div>
+  {% if dashboard_goals %}
+  <div class="dashboard-goals-grid">
+    {% for goal in dashboard_goals %}
+      {% set current = money_value(goal.current_amount) %}
+      {% set target = money_value(goal.target_amount) %}
+      {% set progress = (current / target * 100) if target else 0 %}
+      <a href="{{url_for('goals')}}" class="dashboard-goal-item">
+        <div class="dashboard-goal-top">
+          <span class="goal-dot goal-dot-{{goal.color}}"></span>
+          <strong>{{goal.name}}</strong>
+          <b>{{'%.0f'|format([progress,100]|min)}}%</b>
+        </div>
+        <div class="dashboard-goal-bar"><i style="width:{{[progress,100]|min}}%"></i></div>
+        <div class="dashboard-goal-meta">
+          <span>{{money(goal.current_amount)}} van {{money(goal.target_amount)}}</span>
+          {% if progress >= 100 %}<span>Klaar 🎉</span>
+          {% elif goal.deadline %}<span>tot {{goal.deadline.strftime("%d-%m-%Y")}}</span>
+          {% else %}<span>Geen deadline</span>{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="dashboard-goals-empty">
+    <div><strong>Je eerste spaardoel begint hier.</strong><p>Maak bijvoorbeeld een doel voor een vakantie, auto of noodbuffer.</p></div>
+    <a href="{{url_for('goals')}}">Doel aanmaken →</a>
+  </div>
+  {% endif %}
+</section>
 
 <section class="portfolio-dashboard-card">
   <div class="portfolio-dashboard-head">
