@@ -1816,3 +1816,16 @@ body.theme-light .chart-hover-tooltip{background:#fff;}
 body.theme-light .module-hero,body.theme-light .module-card,body.theme-light .dashboard-alerts-card,body.theme-light .investment-analytics-card,body.theme-light .investment-events-card{background:#fff;border-color:#dce4ed;box-shadow:0 8px 25px rgba(15,23,42,.05)}body.theme-light .module-hero p,body.theme-light .muted-copy{color:#64748b}body.theme-light .transaction-filters input,body.theme-light .transaction-filters select,body.theme-light .transaction-filters button,body.theme-light .transaction-filters a,body.theme-light .investment-event-form input,body.theme-light .investment-event-form select,body.theme-light .investment-event-form button{background:#fff;border-color:#d5dee8;color:#334155}body.theme-light .dashboard-alert{background:#f8fafc;border-color:#e2e8f0}
 @media(max-width:900px){.transaction-filters{grid-template-columns:1fr 1fr 1fr}.transactions-layout{grid-template-columns:1fr}.investment-analytics-grid{grid-template-columns:1fr 1fr}.investment-event-form{grid-template-columns:1fr 1fr 1fr}}
 @media(max-width:600px){.module-hero{align-items:flex-start;flex-direction:column;padding:21px}.module-hero h1{font-size:1.65rem}.transaction-filters{grid-template-columns:1fr 1fr}.transaction-filters input:first-child{grid-column:1/-1}.investment-analytics-grid{grid-template-columns:1fr}.investment-event-form{grid-template-columns:1fr 1fr}.investment-event-form input:last-of-type{grid-column:1/-1}.investment-event-form button{grid-column:1/-1}.investment-events-card .investment-section-head{align-items:flex-start;flex-direction:column}}
+
+
+/* FINTRACK NAVBAR 3.1 — compact desktop navigation */
+@media(min-width:981px){
+  .site-nav{gap:10px}
+  .brand-mark{width:145px}
+  .primary-nav{gap:2px}
+  .primary-nav > a,.primary-nav > .nav-dropdown > summary,.nav-logout{
+    padding-left:8px!important;padding-right:8px!important;font-size:.78rem;
+  }
+  .primary-nav > a,.nav-dropdown > summary{min-height:36px;height:36px}
+  .nav-logout{min-height:36px;height:36px}
+}
