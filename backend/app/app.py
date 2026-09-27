@@ -1808,7 +1808,9 @@ def transactions():
         recurring[key]=recurring.get(key,0)+1
     recurring_items=[{"description":k[1],"category":k[2],"kind":k[0],"amount":k[3],"count":v} for k,v in recurring.items() if v>=2]
     categories=sorted({i["category"] for i in items})
-    return render_template("transactions.html",items=items,categories=categories,selected_type=kind,
+    export_url=url_for("transactions_export", type=kind, category=category, q=query_text,
+                       start=request.args.get("start",""), end=request.args.get("end",""))
+    return render_template("transactions.html",items=items,categories=categories,export_url=export_url,selected_type=kind,
                            selected_category=category,q=query_text,start=request.args.get("start",""),
                            end=request.args.get("end",""),recurring_items=sorted(recurring_items,key=lambda x:x["count"],reverse=True)[:8])
 
