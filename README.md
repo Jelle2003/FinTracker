@@ -2,7 +2,7 @@
 
 FINTRACK is een persoonlijke financiële webapp waarmee je inkomsten, uitgaven en beleggingen kunt opvolgen via een dashboard.
 
-> **Status:** in ontwikkeling. De huidige versie is gebouwd als een Flask-app met templates. Niet alle onderdelen zijn al geschikt voor meerdere gebruikers.
+> **Status:** in ontwikkeling. De huidige versie is gebouwd als een Flask-app met templates. Multi-user data-isolatie en een security-hardeninglaag zijn toegevoegd, maar voer vóór productie een gecontroleerde update en securitytest uit.
 
 ## Thema
 
@@ -49,19 +49,51 @@ FinTracker/
 
 ## Veiligheid en gegevens
 
-- Bewaar wachtwoorden niet als platte tekst; FINTRACK slaat een wachtwoordhash op.
-- Zet geheime sleutels en API-sleutels in omgevingsvariabelen of een niet-gecommitteerd `.env`-bestand. Plaats ze nooit in HTML, JavaScript of GitHub.
-- De huidige applicatie gebruikt één SQLite-database en de financiële modellen hebben nog geen eigenaar-koppeling. **Gebruik de registratie daarom voorlopig niet om andere personen toegang te geven:** gebruikers kunnen anders elkaars transacties zien. Eerst is een databasewijziging nodig waarbij iedere transactie aan een gebruiker wordt gekoppeld, inclusief een veilige migratie van bestaande gegevens.
-- Maak een back-up van de SQLite-database vóór updates of schemawijzigingen. `db.create_all()` maakt ontbrekende tabellen aan, maar migreert bestaande tabellen/kolommen niet automatisch.
-- De Flask-secret-key moet vóór publiek gebruik worden vervangen door een lange, willekeurige geheime waarde die buiten de repository wordt bewaard.
+FINTRACK bevat meerdere lagen die bedoeld zijn om veelvoorkomende webaanvallen te beperken:
+
+- Wachtwoorden worden niet in platte tekst opgeslagen; Werkzeug gebruikt een adaptieve password-hash met unieke salt.
+- CSRF-bescherming is actief op POST-formulieren, inclusief login, registratie, transacties, beleggingen, AI en uitloggen.
+- Sessiecookies zijn `Secure`, `HttpOnly` en `SameSite=Lax` en de sessieduur is beperkt.
+- Login, registratie, AI en beleggingzoekopdrachten hebben rate limiting om geautomatiseerde misbruikpogingen af te remmen.
+- Security headers worden server-side toegevoegd, waaronder HSTS op HTTPS, CSP, X-Frame-Options, nosniff en een strikte Referrer-Policy.
+- Host-header-validatie is ingeschakeld via `TRUSTED_HOSTS`.
+- Financiële records zijn per ingelogd account afgeschermd. Een gebruiker kan records van een andere gebruiker niet via een ID ophalen, wijzigen of verwijderen.
+- De logout-actie gebruikt POST + CSRF in plaats van een GET-link.
+- De Flask-secret-key staat niet meer in de broncode. De applicatie weigert te starten wanneer `FINTRACK_SECRET_KEY` ontbreekt of te kort is.
+- Bewaar API-sleutels en andere geheimen uitsluitend buiten GitHub, bijvoorbeeld in een root-only environment file op de Raspberry Pi.
+- Maak een back-up van de SQLite-database vóór updates of schemawijzigingen. De bestaande startup-migratie koppelt legacy-records aan het eerste bestaande account.
+
+### Secret key instellen
+
+Genereer op de Raspberry Pi een willekeurige sleutel en bewaar die buiten de repository:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Plaats die waarde bijvoorbeeld in een bestand buiten `~/FinTracker`, met alleen leesrechten voor de servicegebruiker. Configureer daarnaast:
+
+```FINTRACK_SECRET_KEY=<lange-willekeurige-sleutel>
+FINTRACK_TRUSTED_HOSTS=fintrackerjelle.duckdns.org,localhost,127.0.0.1
+```
+
+Voor rate limiting kan later een gedeelde opslag zoals Redis worden ingesteld via `FINTRACK_RATE_LIMIT_STORAGE`. De standaard `memory://`-opslag is vooral geschikt voor de huidige kleine single-serveropstelling.
+
+> **Belangrijk:** security-hardening vermindert het risico maar maakt geen webapplicatie "onhackbaar". Houd Flask, dependencies, Raspberry Pi OS, nginx en de database up-to-date en test wijzigingen eerst buiten productie.
 
 ## Raspberry Pi deployment
 
-De huidige installatie wordt gehost op een Raspberry Pi achter nginx en Gunicorn. Na het ophalen van een gecontroleerde wijziging kan de service doorgaans worden bijgewerkt met:
+De huidige installatie wordt gehost op een Raspberry Pi achter nginx en Gunicorn. Omdat de app nu een externe secret vereist, moet de systemd-service die environment file laden vóór de eerste restart. Maak eerst een databaseback-up en installeer de nieuwe dependencies.
+
+Een veilige updatevolgorde is:
 
 ```bash
 cd ~/FinTracker
+cp instance/expenses.db instance/expenses.db.backup-$(date +%Y%m%d-%H%M%S)
 git pull origin main
+source venv/bin/activate
+pip install -r requirements.txt
+python -m py_compile backend/app/app.py backend/app/models.py
 sudo systemctl restart fintrack
 sudo systemctl status fintrack --no-pager
 ```
