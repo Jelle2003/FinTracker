@@ -371,5 +371,12 @@ const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?sa
 const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema";button.setAttribute("aria-label",button.title)};localStorage.setItem(key,mode);window.dispatchEvent(new CustomEvent("fintrack-theme-change",{detail:{mode}}))};
 apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));
 })();
-</script></body>
+</script><script nonce="{{ g.csp_nonce }}">
+/* FINTRACK_NAV_DROPDOWN_CLOSE */
+(()=>{const nav=document.getElementById("primary-nav");if(!nav)return;
+nav.querySelectorAll(".nav-dropdown-menu a").forEach(a=>a.addEventListener("click",()=>{const d=a.closest("details");if(d)d.removeAttribute("open");}));
+document.addEventListener("click",e=>{nav.querySelectorAll(".nav-dropdown[open]").forEach(d=>{if(!d.contains(e.target))d.removeAttribute("open");});});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")nav.querySelectorAll(".nav-dropdown[open]").forEach(d=>d.removeAttribute("open"));});
+})();</script>
+</body>
 </html>
