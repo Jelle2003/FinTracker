@@ -125,6 +125,14 @@
     nav.classList.toggle("is-open", !isOpen);
   });
 
+  nav.querySelectorAll(".nav-dropdown > summary").forEach(summary => {
+    summary.addEventListener("click", () => {
+      nav.querySelectorAll(".nav-dropdown[open]").forEach(dropdown => {
+        if (dropdown !== summary.parentElement) dropdown.removeAttribute("open");
+      });
+    });
+  });
+
   nav.querySelectorAll(".nav-dropdown-menu a").forEach(link => {
     link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
   });
