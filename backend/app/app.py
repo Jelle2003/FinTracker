@@ -63,6 +63,14 @@ app.config.update(
 # nginx terminates HTTPS before forwarding the request to Gunicorn.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
+# Generate the CSP nonce before Flask-WTF registers its CSRF before-request
+# handler. That way even a CSRF-rejected request still has a nonce available
+# when the after-request security headers are generated.
+@app.before_request
+def prepare_csp_nonce():
+    g.csp_nonce = secrets.token_urlsafe(32)
+
+
 csrf = CSRFProtect(app)
 
 limiter = Limiter(
@@ -71,11 +79,6 @@ limiter = Limiter(
     default_limits=[],
     storage_uri=os.environ.get("FINTRACK_RATE_LIMIT_STORAGE", "memory://"),
 )
-
-
-@app.before_request
-def prepare_csp_nonce():
-    g.csp_nonce = secrets.token_urlsafe(32)
 
 
 @app.after_request
