@@ -101,7 +101,7 @@
       <div class="hero-chart-label">FINTRACK</div>
       <div class="hero-bars"><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="hero-chart-line"></div>
-      <div class="hero-coin">€</div>
+      <div class="hero-coin">{{ currency_symbol }}</div>
     </div>
   </div>
 </section>
@@ -120,9 +120,9 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 dashboard-metrics">
-  <div class="dashboard-metric"><div class="metric-icon metric-income">↗</div><p>Inkomsten</p><strong>€{{'%.2f'|format(income_total)}}</strong><span>{{selected_year}}</span></div>
-  <div class="dashboard-metric"><div class="metric-icon metric-expense">↘</div><p>Uitgaven</p><strong>€{{'%.2f'|format(expense_total)}}</strong><span>{{selected_year}}</span></div>
-  <div class="dashboard-metric"><div class="metric-icon metric-balance">€</div><p>Netto over</p><strong class="{% if balance>=0 %}positive{% else %}negative{% endif %}">€{{'%.2f'|format(balance)}}</strong><span>Inkomsten − uitgaven</span></div>
+  <div class="dashboard-metric"><div class="metric-icon metric-income">↗</div><p>Inkomsten</p><strong>{{ currency_symbol }}{{'%.2f'|format(income_total)}}</strong><span>{{selected_year}}</span></div>
+  <div class="dashboard-metric"><div class="metric-icon metric-expense">↘</div><p>Uitgaven</p><strong>{{ currency_symbol }}{{'%.2f'|format(expense_total)}}</strong><span>{{selected_year}}</span></div>
+  <div class="dashboard-metric"><div class="metric-icon metric-balance">{{ currency_symbol }}</div><p>Netto over</p><strong class="{% if balance>=0 %}positive{% else %}negative{% endif %}">{{ currency_symbol }}{{'%.2f'|format(balance)}}</strong><span>Inkomsten − uitgaven</span></div>
   <div class="dashboard-metric"><div class="metric-icon metric-saving">%</div><p>Spaarpercentage</p><strong>{{'%.1f'|format(savings_rate)}}%</strong><span>Van je inkomsten</span></div>
 </div>
 
@@ -141,15 +141,15 @@
     <div class="portfolio-value-panel">
       <span class="portfolio-label">Indicatieve marktwaarde</span>
       {% if investment_priced_count == investment_count %}
-        <strong>€{{'%.2f'|format(investment_market_value)}}</strong>
+        <strong>{{ currency_symbol }}{{'%.2f'|format(investment_market_value)}}</strong>
         <div class="portfolio-result {% if investment_gain is not none and investment_gain >= 0 %}positive{% else %}negative{% endif %}">
-          {% if investment_gain is not none %}{{'+' if investment_gain >= 0 else ''}}€{{'%.2f'|format(investment_gain)}}{% if investment_return is not none %} · {{'+' if investment_return >= 0 else ''}}{{'%.1f'|format(investment_return)}}%{% endif %}{% endif %}
+          {% if investment_gain is not none %}{{'+' if investment_gain >= 0 else ''}}{{ currency_symbol }}{{'%.2f'|format(investment_gain)}}{% if investment_return is not none %} · {{'+' if investment_return >= 0 else ''}}{{'%.1f'|format(investment_return)}}%{% endif %}{% endif %}
         </div>
       {% else %}
         <strong>—</strong>
         <div class="portfolio-result neutral">Koersen tijdelijk niet beschikbaar</div>
       {% endif %}
-      <div class="portfolio-cost">Ingelegd: €{{'%.2f'|format(investment_total_cost)}}</div>
+      <div class="portfolio-cost">Ingelegd: {{ currency_symbol }}{{'%.2f'|format(investment_total_cost)}}</div>
     </div>
 
     <div class="portfolio-mini-stats">
@@ -196,10 +196,10 @@
     <div class="dashboard-card-heading"><div><span class="dashboard-section-eyebrow">ACTIVITEIT</span><h2>Recente transacties</h2></div></div>
     <div class="space-y-3 dashboard-transactions">
       {% for item in recent_incomes %}
-      <div class="transaction-row"><div class="transaction-icon income">+</div><div class="transaction-copy"><p>{{item.description}} <span>· Inkomst</span></p><small>{{item.start_date.strftime("%d-%m-%Y")}}</small></div><strong class="positive">+€{{'%.2f'|format(item.amount)}}</strong></div>
+      <div class="transaction-row"><div class="transaction-icon income">+</div><div class="transaction-copy"><p>{{item.description}} <span>· Inkomst</span></p><small>{{item.start_date.strftime("%d-%m-%Y")}}</small></div><strong class="positive">+{{ currency_symbol }}{{'%.2f'|format(item.amount)}}</strong></div>
       {% endfor %}
       {% for item in recent_expenses %}
-      <div class="transaction-row"><div class="transaction-icon expense">−</div><div class="transaction-copy"><p>{{item.description}} <span>· Uitgave</span></p><small>{{item.date.strftime("%d-%m-%Y")}}</small></div><strong class="negative">−€{{'%.2f'|format(item.amount)}}</strong></div>
+      <div class="transaction-row"><div class="transaction-icon expense">−</div><div class="transaction-copy"><p>{{item.description}} <span>· Uitgave</span></p><small>{{item.date.strftime("%d-%m-%Y")}}</small></div><strong class="negative">−{{ currency_symbol }}{{'%.2f'|format(item.amount)}}</strong></div>
       {% endfor %}
       {% if not recent_incomes and not recent_expenses %}<div class="dashboard-empty-chart"><span>＋</span><p>Nog geen transacties geregistreerd.</p></div>{% endif %}
     </div>
@@ -260,7 +260,7 @@ function drawCashflow(){
     line.setAttribute("x1",p.l);line.setAttribute("x2",w-p.r);line.setAttribute("y1",yy);line.setAttribute("y2",yy);
     line.setAttribute("stroke",t.grid);line.setAttribute("stroke-width","1");line.setAttribute("stroke-dasharray","4 6");svg.appendChild(line);
     const label=document.createElementNS("http://www.w3.org/2000/svg","text");
-    label.textContent="€"+Math.round(max-(max/4)*i);
+    label.textContent="{{ currency_symbol }}"+Math.round(max-(max/4)*i);
     label.setAttribute("x",p.l-9);label.setAttribute("y",yy+4);label.setAttribute("text-anchor","end");label.setAttribute("fill",t.text);label.setAttribute("font-size",mobile?"9":"11");
     svg.appendChild(label);
   }
@@ -286,7 +286,7 @@ function drawCashflow(){
       dot.setAttribute("cx",x(i));dot.setAttribute("cy",y(v));dot.setAttribute("r",mobile?"3":"3.5");
       dot.setAttribute("fill",t.surface);dot.setAttribute("stroke",color);dot.setAttribute("stroke-width","2");
       const pointTitle=document.createElementNS("http://www.w3.org/2000/svg","title");
-      pointTitle.textContent=months[i]+": €"+Number(v).toFixed(2);
+      pointTitle.textContent=months[i]+": {{ currency_symbol }}"+Number(v).toFixed(2);
       dot.appendChild(pointTitle);
       svg.appendChild(dot);
     });
@@ -347,7 +347,7 @@ function drawCategory(){
   const r=92,c=160,circ=2*Math.PI*r;let offset=0;
   const bg=document.createElementNS("http://www.w3.org/2000/svg","circle");bg.setAttribute("cx",c);bg.setAttribute("cy",c);bg.setAttribute("r",r);bg.setAttribute("fill","none");bg.setAttribute("stroke",t.border);bg.setAttribute("stroke-width","34");svg.appendChild(bg);
   values.forEach((v,i)=>{const seg=document.createElementNS("http://www.w3.org/2000/svg","circle");seg.setAttribute("cx",c);seg.setAttribute("cy",c);seg.setAttribute("r",r);seg.setAttribute("fill","none");seg.setAttribute("stroke",colors[i%colors.length]);seg.setAttribute("stroke-width","34");seg.setAttribute("stroke-linecap","butt");seg.setAttribute("stroke-dasharray",((v/total)*circ)+" "+circ);seg.setAttribute("stroke-dashoffset",-offset);seg.setAttribute("transform","rotate(-90 160 160)");svg.appendChild(seg);offset+=(v/total)*circ});
-  const center=document.createElementNS("http://www.w3.org/2000/svg","text");center.textContent="€"+Math.round(total);center.setAttribute("x","160");center.setAttribute("y","156");center.setAttribute("text-anchor","middle");center.setAttribute("fill",t.text);center.setAttribute("font-size","20");center.setAttribute("font-weight","800");svg.appendChild(center);
+  const center=document.createElementNS("http://www.w3.org/2000/svg","text");center.textContent="{{ currency_symbol }}"+Math.round(total);center.setAttribute("x","160");center.setAttribute("y","156");center.setAttribute("text-anchor","middle");center.setAttribute("fill",t.text);center.setAttribute("font-size","20");center.setAttribute("font-weight","800");svg.appendChild(center);
   const sub=document.createElementNS("http://www.w3.org/2000/svg","text");sub.textContent="totaal";sub.setAttribute("x","160");sub.setAttribute("y","178");sub.setAttribute("text-anchor","middle");sub.setAttribute("fill",t.text);sub.setAttribute("font-size","11");svg.appendChild(sub);
   host.style.display="none";host.parentElement.appendChild(svg);
   const legend=host.parentElement.querySelector(".native-donut-legend");if(legend)legend.remove();
