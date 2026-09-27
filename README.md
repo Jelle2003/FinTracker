@@ -17,6 +17,7 @@ FINTRACK is een moderne persoonlijke financiële webapp waarmee je inkomsten, ui
 - **Admin:** gebruikersbeheer, rollen en basisstatistieken voor administrators.
 - **Multi-user:** financiële gegevens zijn per account geïsoleerd.
 - **Responsive UX:** desktop- en mobiele interface met moderne navigatie en hamburger-menu.
+- **Gedeelde navigatie:** alle ingelogde pagina's gebruiken dezelfde centrale `frontend/_navbar.html`, zodat hoogte, volgorde en UX van de navbar overal identiek blijven.
 - **Thema:** licht/donker thema dat centraal wordt opgeslagen en over alle pagina's wordt toegepast.
 - **Valuta:** gebruikers kunnen EUR, USD of GBP kiezen; bedragen worden waar mogelijk omgerekend met actuele wisselkoersen.
 - **Security:** CSRF, rate limiting, veilige cookies, CSP, security headers, trusted hosts en verplichte externe secret key.
@@ -231,6 +232,12 @@ curl -I http://127.0.0.1:8000
 ```
 
 > Maak altijd eerst een databaseback-up. Startupschema-migraties zijn ontworpen om bestaande installaties bij te werken, maar een back-up blijft noodzakelijk.
+
+## UI-architectuur
+
+De ingelogde pagina's gebruiken een gedeelde navigatie-partial in `frontend/_navbar.html`. Hierdoor hoeft de navbar niet meer afzonderlijk in iedere pagina te worden onderhouden en verkleint de kans op verschillen tussen pagina's.
+
+De centrale CSS voor de navigatie staat in `frontend/css/style.css`. De navbar gebruikt vaste afmetingen, consistente spacing en aparte desktop/mobile breakpoints om layout-shifts te voorkomen.
 
 ## Development
 
