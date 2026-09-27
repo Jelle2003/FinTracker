@@ -250,8 +250,42 @@ function drawCashflow(){
   const legend=host.parentElement.querySelector(".native-chart-legend");if(legend)legend.remove();
   const l=document.createElement("div");
   l.className="native-chart-legend";
-  l.innerHTML='<span><i style="background:'+t.income+'"></i>Inkomsten</span><span><i style="background:'+t.expense+'"></i>Uitgaven</span>';
+  l.innerHTML='<span class="chart-legend-item"><i style="background:'+t.income+'"></i><b>Inkomsten</b><small>ontvangen</small></span><span class="chart-legend-item"><i style="background:'+t.expense+'"></i><b>Uitgaven</b><small>besteed</small></span>';
   host.parentElement.appendChild(l);
+
+  let tip=host.parentElement.querySelector(".chart-hover-tooltip");
+  if(!tip){
+    tip=document.createElement("div");
+    tip.className="chart-hover-tooltip";
+    tip.setAttribute("role","status");
+    tip.setAttribute("aria-live","polite");
+    host.parentElement.appendChild(tip);
+  }
+
+  const dots=[...svg.querySelectorAll("circle")];
+  dots.forEach(dot=>{
+    dot.style.cursor="crosshair";
+    dot.addEventListener("mouseenter",()=>showChartTooltip(dot,tip,svg));
+    dot.addEventListener("mouseleave",()=>tip.classList.remove("is-visible"));
+    dot.addEventListener("focus",()=>showChartTooltip(dot,tip,svg));
+    dot.addEventListener("blur",()=>tip.classList.remove("is-visible"));
+  });
+}
+
+function showChartTooltip(dot,tip,svg){
+  const title=dot.querySelector("title");
+  if(!title)return;
+  const parts=title.textContent.split(":");
+  const label=parts.shift().trim();
+  const value=parts.join(":").trim();
+  tip.innerHTML='<strong>'+label+'</strong><span>'+value+'</span>';
+  const point=dot.getBoundingClientRect();
+  const box=svg.getBoundingClientRect();
+  const x=point.left-box.left+point.width/2;
+  const y=point.top-box.top;
+  tip.style.left=Math.max(8,Math.min(box.width-128,x))+"px";
+  tip.style.top=Math.max(6,y-58)+"px";
+  tip.classList.add("is-visible");
 }
 
 function drawCategory(){
