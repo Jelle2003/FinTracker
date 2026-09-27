@@ -43,7 +43,6 @@
 <tbody>{% for r in rows %}<tr class="border-t border-slate-800">
 <td class="p-3"><strong>{{r.holding.symbol}}</strong><br><span class="text-xs text-slate-500">{{r.holding.name}}</span></td><td class="p-3">{{r.holding.asset_type}}</td><td class="p-3 text-right">{{r.holding.quantity}}</td><td class="p-3 text-right">€{{"%.2f"|format(r.holding.average_price)}}</td><td class="p-3 text-right">{% if r.current_price is not none %}{{"%.2f"|format(r.current_price)}} {{r.currency}}{% else %}—{% endif %}</td><td class="p-3 text-right">{% if r.value is not none %}€{{"%.2f"|format(r.value)}}{% else %}—{% endif %}</td>
 <td class="p-3"><form method="post" action="{{url_for('delete_investment',investment_id=r.holding.id)}}">
-                {{ csrf_token() }}
                 {{ csrf_token() }}<button class="text-rose-300 text-xs">Verwijder</button></form></td></tr>
 {% else %}<tr><td colspan="7" class="p-6 text-center text-slate-400"><div class="empty-portfolio"><span>＋</span><strong>Je portefeuille is nog leeg</strong><small>Voeg hierboven je eerste aandeel, ETF of crypto toe.</small></div></td></tr>{% endfor %}</tbody></table>
 </div></section>
@@ -51,7 +50,6 @@
 <section class="rounded-2xl border border-slate-800 p-4 investment-add-card">
 <div class="investment-add-heading"><div><p class="investing-eyebrow">NIEUWE POSITIE</p><h2 class="text-lg font-semibold">Belegging toevoegen</h2></div><span class="investment-step">1 → 2 → 3</span></div>
 <form method="post" action="{{url_for('add_investment')}}" class="space-y-3" id="investment-form" autocomplete="off">
-                {{ csrf_token() }}
                 {{ csrf_token() }}
 <div class="investment-search-field">
 <label class="block text-sm" for="investment-search">Zoek je belegging</label>
