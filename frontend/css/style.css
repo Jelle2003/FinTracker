@@ -810,3 +810,18 @@ footer{
   .login-security span:last-child{color:#64748b}
   .login-footer{color:#94a3b8}
 }
+
+
+/* Registration feedback */
+.register-password-hint{
+  min-height:1.1em;
+  margin:-9px 0 0;
+  font-size:.72rem;
+  color:var(--muted);
+}
+.register-password-hint.is-valid{color:var(--success)}
+.register-password-hint.is-invalid{color:var(--danger)}
+@media (prefers-color-scheme: light){
+  .register-password-hint.is-valid{color:#047857}
+  .register-password-hint.is-invalid{color:#be123c}
+}
