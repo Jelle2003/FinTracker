@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07101d">
+<title>Admin · FINTRACK</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="h-full bg-slate-900 text-slate-100">
+<main class="mx-auto max-w-6xl px-4 py-8">
+<header class="site-header"><div class="site-nav">
+  <a href="{{url_for('index')}}" class="brand-mark" aria-label="FINTRACK home">
+    <span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 32 32" role="img"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M8 21.5 13 16l4 3 7-8" fill="none" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10h8" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round"/></svg></span><span class="brand-wordmark"><b>FIN</b>TRACK</span>
+  </a>
+  <button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button>
+  <nav id="primary-nav" class="primary-nav">
+    <a href="{{url_for('index')}}">Overzicht</a>
+    <div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div>
+    <a href="{{url_for('investing')}}">Beleggen</a>
+    <a href="{{url_for('market')}}">Markt & Nieuws</a>
+    <a href="{{url_for('ai_investor')}}">AI Adviseur</a>
+    <a href="{{url_for('account')}}">Account</a>
+    <a href="{{url_for('admin')}}" class="admin-nav-link">Admin</a>
+    <form method="post" action="{{url_for('logout')}}" class="nav-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-logout">Afmelden</button></form>
+  </nav>
+</div></header>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+{% if messages %}<div class="space-y-2 mb-4">{% for category,message in messages %}
+<div class="rounded-xl px-4 py-3 text-sm {% if category=='success' %}bg-emerald-500/10 text-emerald-300 border border-emerald-400/20{% else %}bg-rose-500/10 text-rose-300 border border-rose-400/20{% endif %}">{{message}}</div>
+{% endfor %}</div>{% endif %}{% endwith %}
+
+<section class="admin-hero">
+  <div>
+    <p class="admin-eyebrow">ADMIN CONTROL CENTER</p>
+    <h1>Beheer van FINTRACK</h1>
+    <p>Beheer gebruikers en krijg een snel overzicht van de gegevens in je financiële applicatie.</p>
+  </div>
+  <div class="admin-badge">ADMIN</div>
+</section>
+
+<section class="admin-stats">
+  <article><span>Gebruikers</span><strong>{{total_users}}</strong></article>
+  <article><span>Administrators</span><strong>{{admin_count}}</strong></article>
+  <article><span>Uitgaven</span><strong>{{total_expenses}}</strong></article>
+  <article><span>Inkomsten</span><strong>{{total_incomes}}</strong></article>
+  <article><span>Beleggingen</span><strong>{{total_investments}}</strong></article>
+</section>
+
+<section class="admin-card">
+  <div class="admin-card-head">
+    <div><p class="admin-eyebrow">USER MANAGEMENT</p><h2>Gebruikers</h2></div>
+    <span class="admin-count">{{total_users}} account{{'' if total_users == 1 else 's'}}</span>
+  </div>
+
+  <div class="admin-user-list">
+  {% for user in users %}
+    <article class="admin-user-row">
+      <div class="admin-user-main">
+        <div class="admin-avatar">{{user.username[:1]|upper}}</div>
+        <div>
+          <strong>{{user.username}}</strong>
+          <span>
+            {% if user.id == current_user.id %}Jij · {% endif %}
+            {{user.expenses|length}} uitgaven · {{user.incomes|length}} inkomsten · {{user.investments|length}} beleggingen
+          </span>
+        </div>
+      </div>
+      <div class="admin-user-actions">
+        {% if user.is_admin %}<span class="admin-role admin-role-admin">Administrator</span>{% else %}<span class="admin-role">Gebruiker</span>{% endif %}
+        {% if user.id != current_user.id %}
+        <form method="post" action="{{url_for('toggle_admin', user_id=user.id)}}">
+          <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+          <button class="admin-action" type="submit">{{'Admin verwijderen' if user.is_admin else 'Maak admin'}}</button>
+        </form>
+        <form method="post" action="{{url_for('delete_user', user_id=user.id)}}" onsubmit="return confirm('Weet je zeker dat je {{user.username}} en alle bijbehorende financiële gegevens wilt verwijderen?')">
+          <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+          <button class="admin-action admin-action-danger" type="submit">Verwijderen</button>
+        </form>
+        {% else %}
+        <span class="admin-self">Jouw account</span>
+        {% endif %}
+      </div>
+    </article>
+  {% else %}
+    <div class="admin-empty">Geen gebruikers gevonden.</div>
+  {% endfor %}
+  </div>
+</section>
+
+<p class="admin-note">Adminrechten geven toegang tot gebruikersbeheer. Wachtwoorden worden nooit zichtbaar gemaakt in het adminpaneel.</p>
+</main>
+
+<script nonce="{{ g.csp_nonce }}">
+(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
+</script>
+<script nonce="{{ g.csp_nonce }}">
+(()=>{const key="fintrack-theme",root=document.documentElement,button=document.getElementById("themeToggle");const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema";button.setAttribute("aria-label",button.title)}localStorage.setItem(key,mode)};apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));})();
+</script>
+</body></html>
