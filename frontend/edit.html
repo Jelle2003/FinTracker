@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema">
+  <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+  <span class="theme-toggle-label">Donker</span>
+</button>
 <main class="app-shell">
     <header class="site-header">
         <div class="site-nav">
@@ -97,5 +101,12 @@
     });
 })();
 </script>
-</body>
+<script nonce="{{ g.csp_nonce }}">
+/* FINTRACK_THEME */
+(()=>{const key="fintrack-theme",root=document.documentElement,button=document.getElementById("themeToggle");
+const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
+const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema";button.setAttribute("aria-label",button.title)};localStorage.setItem(key,mode);window.dispatchEvent(new CustomEvent("fintrack-theme-change",{detail:{mode}}))};
+apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));
+})();
+</script></body>
 </html>
