@@ -308,8 +308,11 @@ footer{
 /* Unified navigation with mobile hamburger */
 .site-header{border-bottom:1px solid var(--border)!important;padding:0 0 16px!important;margin-bottom:24px!important}
 .site-nav{display:flex;align-items:center;justify-content:space-between;gap:18px;position:relative}
-.brand-mark{font-size:1.2rem;font-weight:800;letter-spacing:-.04em;white-space:nowrap}
-.brand-mark span{color:#38bdf8}
+.brand-mark{display:inline-flex;align-items:center;gap:9px;font-size:1.12rem;font-weight:800;letter-spacing:-.045em;white-space:nowrap}
+.brand-logo{width:34px;height:34px;display:inline-flex;flex:0 0 34px;filter:drop-shadow(0 6px 14px rgba(14,165,233,.18))}
+.brand-logo svg{display:block;width:100%;height:100%;color:#38bdf8;--logo-mark:#07101d}
+.brand-wordmark{color:var(--text)}
+.brand-wordmark b{color:#38bdf8;font-weight:850}
 .primary-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .primary-nav a{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent!important;background:transparent!important;color:#b7c4d5!important;border-radius:10px!important;padding:9px 11px!important;font-size:.86rem;font-weight:550;white-space:nowrap}
 .primary-nav a:hover,.primary-nav a.is-active{background:#18283b!important;border-color:#30465f!important;color:#f1f5f9!important}
@@ -1015,10 +1018,8 @@ footer{
    FINTRACK THEME SWITCHER
    ============================================================ */
 .theme-toggle{
-  position:fixed;
-  top:18px;
-  right:18px;
-  z-index:100;
+  position:relative;
+  z-index:2;
   display:inline-flex;
   align-items:center;
   gap:7px;
@@ -1037,9 +1038,10 @@ footer{
 .theme-toggle-icon{font-size:.9rem;line-height:1}
 .theme-toggle-label{white-space:nowrap}
 @media(max-width:800px){
-  /* Keep the theme switch beside the hamburger instead of underneath it. */
-  .theme-toggle{top:12px;right:62px;min-height:36px;padding:0 10px}
+  .theme-toggle{min-height:40px;padding:0 10px}
   .theme-toggle-label{display:none}
+  .brand-logo{width:32px;height:32px;flex-basis:32px}
+  .brand-mark{font-size:1.04rem;gap:8px}
 }
 
 /* Explicit theme overrides, so the button wins over the device setting. */
