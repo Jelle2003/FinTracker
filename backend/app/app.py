@@ -417,8 +417,16 @@ def account():
             investment_horizon = (request.form.get("investment_horizon") or "medium").lower()
 
             try:
-                monthly_investment_budget = float(request.form.get("monthly_investment_budget") or 0)
-                emergency_fund_target = float(request.form.get("emergency_fund_target") or 0)
+                monthly_investment_budget_input = float(request.form.get("monthly_investment_budget") or 0)
+                emergency_fund_target_input = float(request.form.get("emergency_fund_target") or 0)
+                monthly_investment_budget = convert_amount(
+                    monthly_investment_budget_input, current_user.currency, "EUR"
+                )
+                emergency_fund_target = convert_amount(
+                    emergency_fund_target_input, current_user.currency, "EUR"
+                )
+                if monthly_investment_budget is None or emergency_fund_target is None:
+                    raise ValueError
             except ValueError:
                 monthly_investment_budget = -1
                 emergency_fund_target = -1
