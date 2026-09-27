@@ -58,3 +58,4 @@ class Investment(db.Model):
     asset_type = db.Column(db.String(30), nullable=False, default="ETF")
     quantity = db.Column(db.Float, nullable=False, default=0)
     average_price = db.Column(db.Float, nullable=False, default=0)
+    currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
