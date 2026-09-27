@@ -6,6 +6,7 @@
   <span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 32 32" role="img"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M8 21.5 13 16l4 3 7-8" fill="none" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10h8" stroke="var(--logo-mark)" stroke-width="2.7" stroke-linecap="round"/></svg></span><span class="brand-wordmark"><b>FIN</b>TRACK</span>
 </a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button><nav id="primary-nav" class="primary-nav" aria-label="Hoofdnavigatie">
       <a href="{{url_for('index')}}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">Overzicht</a>
+      <a href="{{url_for('goals')}}" class="{% if request.endpoint == 'goals' %}is-active{% endif %}">Spaardoelen</a>
 
       <details class="nav-dropdown">
         <summary class="{% if request.endpoint in ['income','expenses'] %}is-active{% endif %}">
