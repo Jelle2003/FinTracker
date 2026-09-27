@@ -90,17 +90,25 @@
 <div class="rounded-2xl border border-slate-800 p-4"><p class="text-sm text-slate-400">Ongerealiseerd resultaat</p><p class="mt-2 text-2xl font-semibold {% if gain is not none and gain >= 0 %}text-emerald-300{% elif gain is not none %}text-rose-300{% endif %}">{% if gain is not none %}{{ currency_symbol }}{{"%.2f"|format(gain)}}{% else %}—{% endif %}</p></div>
 </div>
 
+<section class="portfolio-ai-card mb-6">
+  <div><span class="dashboard-section-eyebrow">FINTRACK 2.0 · PORTFOLIOCHECK</span><h2>Je portefeuille vraagt om context</h2><p>Koerswinst alleen vertelt niet of een positie nog bij je doelen, horizon en risicoprofiel past.</p></div>
+  <div class="portfolio-ai-meta"><span>Profiel: {{ {'defensive':'Defensief','balanced':'Gebalanceerd','dynamic':'Dynamisch'}.get(current_user.risk_profile, 'Gebalanceerd') }}</span><span>Horizon: {{ {'short':'&lt; 3 jaar','medium':'3–7 jaar','long':'> 7 jaar'}.get(current_user.investment_horizon, '3–7 jaar') }}</span></div>
+  <a href="{{url_for('ai_investor', mode='portfolio')}}" class="portfolio-ai-action">Analyseer mijn portefeuille met AI <span>→</span></a>
+  <small>AI gebruikt je portefeuille, spaardoelen, profiel en actuele marktdata. Zie signalen als een reden om iets te herbekijken, niet als gegarandeerde koop- of verkoopopdracht.</small>
+</section>
+
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
 <section class="lg:col-span-2 overflow-x-auto rounded-2xl border border-slate-800">
 <div class="investment-section-head"><div><h2 class="text-lg font-semibold">Mijn portefeuille</h2><p>Je huidige posities en indicatieve koersen.</p></div><span class="investment-live-pill"><i></i> Koersen live opgehaald</span></div>
 <div class="portfolio-table-wrap">
 <p class="portfolio-scroll-hint">Op smalle schermen: veeg horizontaal om alle kolommen te bekijken.</p>
-<table class="min-w-full text-sm"><thead class="bg-slate-800/50 text-left"><tr><th class="p-3">Belegging</th><th class="p-3">Type</th><th class="p-3 text-right">Aantal</th><th class="p-3 text-right">Aankoopprijs</th><th class="p-3 text-right">Koers</th><th class="p-3 text-right">Waarde</th><th></th></tr></thead>
+<table class="min-w-full text-sm"><thead class="bg-slate-800/50 text-left"><tr><th class="p-3">Belegging</th><th class="p-3">Type</th><th class="p-3 text-right">Aantal</th><th class="p-3 text-right">Aankoopprijs</th><th class="p-3 text-right">Koers</th><th class="p-3 text-right">Waarde</th><th class="p-3 text-right">Resultaat</th><th></th></tr></thead>
 <tbody>{% for r in rows %}<tr class="border-t border-slate-800">
 <td class="p-3"><strong>{{r.holding.symbol}}</strong><br><span class="text-xs text-slate-500">{{r.holding.name}}</span></td><td class="p-3">{{r.holding.asset_type}}</td><td class="p-3 text-right">{{r.holding.quantity}}</td><td class="p-3 text-right">{{ money(r.holding.average_price, r.holding.currency) }}</td><td class="p-3 text-right">{% if r.current_price is not none %}{{"%.2f"|format(r.current_price)}} {{r.currency}}{% else %}—{% endif %}</td><td class="p-3 text-right">{% if r.value is not none %}{{ currency_symbol }}{{"%.2f"|format(r.value)}}{% else %}—{% endif %}</td>
+<td class="p-3 text-right">{% if r.gain_pct is not none %}<span class="{% if r.gain_pct >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">{{'+' if r.gain_pct >= 0 else ''}}{{'%.1f'|format(r.gain_pct)}}%</span>{% else %}—{% endif %}</td>
 <td class="p-3"><form method="post" action="{{url_for('delete_investment',investment_id=r.holding.id)}}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-rose-300 text-xs">Verwijder</button></form></td></tr>
-{% else %}<tr><td colspan="7" class="p-6 text-center text-slate-400"><div class="empty-portfolio"><span>＋</span><strong>Je portefeuille is nog leeg</strong><small>Voeg hierboven je eerste aandeel, ETF of crypto toe.</small></div></td></tr>{% endfor %}</tbody></table>
+{% else %}<tr><td colspan="8" class="p-6 text-center text-slate-400"><div class="empty-portfolio"><span>＋</span><strong>Je portefeuille is nog leeg</strong><small>Voeg hierboven je eerste aandeel, ETF of crypto toe.</small></div></td></tr>{% endfor %}</tbody></table>
 </div></section>
 
 <section class="rounded-2xl border border-slate-800 p-4 investment-add-card">
