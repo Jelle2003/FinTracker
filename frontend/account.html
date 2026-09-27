@@ -83,8 +83,64 @@
     </main>
 
 <script nonce="{{ g.csp_nonce }}">
-(()=>{const root=document.documentElement,button=document.getElementById("themeToggle"),accountButton=document.getElementById("accountThemeButton"),key="fintrack-theme";const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");[button,accountButton].forEach(()=>{});if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema"}localStorage.setItem(key,mode)};const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));accountButton?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));})();
-(()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open)});nav.querySelectorAll(".nav-dropdown-menu a").forEach(a=>a.addEventListener("click",()=>{const d=a.closest("details");if(d)d.removeAttribute("open");}));})();
+/* Thema, mobiele navigatie en dropdowns */
+(() => {
+  const root = document.documentElement;
+  const themeButton = document.getElementById("themeToggle");
+  const accountThemeButton = document.getElementById("accountThemeButton");
+  const menuButton = document.querySelector(".menu-toggle");
+  const nav = document.getElementById("primary-nav");
+  const themeKey = "fintrack-theme";
+
+  const applyTheme = mode => {
+    root.dataset.theme = mode;
+    document.body.classList.toggle("theme-light", mode === "light");
+    document.body.classList.toggle("theme-dark", mode === "dark");
+
+    if (themeButton) {
+      themeButton.querySelector(".theme-toggle-icon").textContent = mode === "light" ? "☀" : "☾";
+      themeButton.querySelector(".theme-toggle-label").textContent = mode === "light" ? "Licht" : "Donker";
+      themeButton.title = mode === "light" ? "Schakel naar donker thema" : "Schakel naar licht thema";
+    }
+
+    localStorage.setItem(themeKey, mode);
+  };
+
+  const savedTheme = localStorage.getItem(themeKey);
+  const theme = savedTheme === "light" || savedTheme === "dark"
+    ? savedTheme
+    : (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+
+  applyTheme(theme);
+
+  themeButton?.addEventListener("click", () => applyTheme(root.dataset.theme === "light" ? "dark" : "light"));
+  accountThemeButton?.addEventListener("click", () => applyTheme(root.dataset.theme === "light" ? "dark" : "light"));
+
+  if (!menuButton || !nav) return;
+
+  menuButton.addEventListener("click", () => {
+    const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+    menuButton.setAttribute("aria-expanded", String(!isOpen));
+    menuButton.setAttribute("aria-label", isOpen ? "Menu openen" : "Menu sluiten");
+    nav.classList.toggle("is-open", !isOpen);
+  });
+
+  nav.querySelectorAll(".nav-dropdown-menu a").forEach(link => {
+    link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
+  });
+
+  document.addEventListener("click", event => {
+    nav.querySelectorAll(".nav-dropdown[open]").forEach(dropdown => {
+      if (!dropdown.contains(event.target)) dropdown.removeAttribute("open");
+    });
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      nav.querySelectorAll(".nav-dropdown[open]").forEach(dropdown => dropdown.removeAttribute("open"));
+    }
+  });
+})();
 </script>
 </body>
 </html>
