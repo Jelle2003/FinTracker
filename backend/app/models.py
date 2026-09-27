@@ -65,6 +65,8 @@ class Investment(db.Model):
     quantity = db.Column(db.Float, nullable=False, default=0)
     average_price = db.Column(db.Float, nullable=False, default=0)
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
+    sector = db.Column(db.String(60), nullable=True)
+    region = db.Column(db.String(40), nullable=True)
 
 
 class SavingsGoal(db.Model):
