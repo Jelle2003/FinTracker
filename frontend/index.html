@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema">
+  <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+  <span class="theme-toggle-label">Donker</span>
+</button>
 <main class="mx-auto max-w-6xl px-4 py-8">
 
 <header class="site-header">
@@ -165,5 +169,12 @@ new Chart(document.getElementById("yearChart"),{type:"bar",data:{labels:months,d
 const c=document.getElementById("categoryChart");if(c)new Chart(c,{type:"doughnut",data:{labels:{{category_labels|tojson}},datasets:[{data:{{category_values|tojson}}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#cbd5e1",boxWidth:12,usePointStyle:true}}}}});
 (()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
 </script>
-</body>
+<script nonce="{{ g.csp_nonce }}">
+/* FINTRACK_THEME */
+(()=>{const key="fintrack-theme",root=document.documentElement,button=document.getElementById("themeToggle");
+const saved=localStorage.getItem(key),initial=saved==="light"||saved==="dark"?saved:(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
+const apply=mode=>{root.dataset.theme=mode;document.body.classList.toggle("theme-light",mode==="light");document.body.classList.toggle("theme-dark",mode==="dark");if(button){button.querySelector(".theme-toggle-icon").textContent=mode==="light"?"☀":"☾";button.querySelector(".theme-toggle-label").textContent=mode==="light"?"Licht":"Donker";button.title=mode==="light"?"Schakel naar donker thema":"Schakel naar licht thema";button.setAttribute("aria-label",button.title)};localStorage.setItem(key,mode);window.dispatchEvent(new CustomEvent("fintrack-theme-change",{detail:{mode}}))};
+apply(initial);button?.addEventListener("click",()=>apply(root.dataset.theme==="light"?"dark":"light"));
+})();
+</script></body>
 </html>
