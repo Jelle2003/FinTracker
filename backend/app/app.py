@@ -1816,15 +1816,36 @@ def transactions():
 @app.route("/transactions/export")
 @login_required
 def transactions_export():
+    """Export exactly the transactions currently selected by the filters."""
+    kind=(request.args.get("type") or "all").strip().lower()
+    category=(request.args.get("category") or "").strip()
+    query_text=(request.args.get("q") or "").strip().lower()
+    start=parse_date_or_none(request.args.get("start") or "")
+    end=parse_date_or_none(request.args.get("end") or "")
+
+    rows=[]
+    if kind in {"all","income"}:
+        for item in owned_query(Income).all():
+            if (start and item.start_date<start) or (end and item.start_date>end): continue
+            if category and item.category!=category: continue
+            if query_text and query_text not in item.description.lower(): continue
+            rows.append((item.start_date,"Inkomst",item.category,item.description,money_value(item.amount)))
+    if kind in {"all","expense"}:
+        for item in owned_query(Expense).all():
+            if (start and item.date<start) or (end and item.date>end): continue
+            if category and item.category!=category: continue
+            if query_text and query_text not in item.description.lower(): continue
+            rows.append((item.date,"Uitgave",item.category,item.description,money_value(item.amount)))
+
+    rows.sort(key=lambda row: row[0], reverse=True)
     output=io.StringIO()
     writer=csv.writer(output)
     writer.writerow(["Datum","Type","Categorie","Omschrijving","Bedrag","Valuta"])
-    for item in owned_query(Income).order_by(Income.start_date.desc()).all():
-        writer.writerow([item.start_date.isoformat(),"Inkomst",item.category,item.description,money_value(item.amount),current_user.currency])
-    for item in owned_query(Expense).order_by(Expense.date.desc()).all():
-        writer.writerow([item.date.isoformat(),"Uitgave",item.category,item.description,money_value(item.amount),current_user.currency])
+    for row in rows:
+        writer.writerow([row[0].isoformat(),row[1],row[2],row[3],row[4],current_user.currency])
     return Response("\ufeff"+output.getvalue(),mimetype="text/csv; charset=utf-8",
                     headers={"Content-Disposition":"attachment; filename=fintrack-transacties.csv"})
+
 
 
 def build_financial_alerts():
