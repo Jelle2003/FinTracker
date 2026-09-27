@@ -257,11 +257,13 @@ footer{
 
 /* Dashboard charts */
 .chart-wrap{position:relative;width:100%;}
-.chart-wrap-main{height:320px;}
-.chart-wrap-category{height:300px;}
+.chart-wrap-main{height:auto;min-height:320px;overflow:visible;}
+.chart-wrap-category{height:300px;overflow:visible;}
+.chart-wrap-main .native-chart{height:320px;}
 @media(max-width:760px){
-  .chart-wrap-main{height:260px;}
+  .chart-wrap-main{min-height:0;}
   .chart-wrap-category{height:260px;}
+  .chart-wrap-main .native-chart{height:280px;}
 }
 
 
@@ -1407,9 +1409,16 @@ a.market-news-title:hover{color:var(--brand)}
 /* Chart legend + hover tooltip */
 .dashboard-chart-card{position:relative}
 .native-chart-legend{
+  display:flex!important;
   align-items:stretch!important;
+  justify-content:flex-start!important;
   gap:8px!important;
   margin-top:12px!important;
+  padding:0 4px 4px!important;
+  width:100%!important;
+  min-height:44px;
+  position:relative;
+  z-index:2;
 }
 .chart-legend-item{
   display:grid!important;
