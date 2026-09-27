@@ -256,8 +256,8 @@ def register():
         if len(username) < 3 or len(username) > 80:
             flash("Kies een gebruikersnaam van 3 tot 80 tekens.", "error")
             return render_template("register.html", username=username)
-        if len(password) < 10:
-            flash("Gebruik een wachtwoord van minstens 10 tekens.", "error")
+        if len(password) < 12:
+            flash("Gebruik een wachtwoord van minstens 12 tekens.", "error")
             return render_template("register.html", username=username)
         if len(password) > 128:
             flash("Gebruik een wachtwoord van maximaal 128 tekens.", "error")
