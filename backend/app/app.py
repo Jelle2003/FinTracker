@@ -1782,7 +1782,7 @@ def transactions():
             if (start and item.start_date<start) or (end and item.start_date>end): continue
             if category and item.category!=category: continue
             if query_text and query_text not in item.description.lower(): continue
-            items.append({"date":item.start_date,"kind":"income","category":item.category,"description":item.description,"amount":money_value(item.amount),"id":item.id})
+            items.append({"date":item.start_date,"kind":"income","category":item.category,"description":item.description,"amount":item.amount,"id":item.id})
     if kind in {"all","expense"}:
         for item in owned_query(Expense).all():
             if (start and item.date<start) or (end and item.date>end): continue
