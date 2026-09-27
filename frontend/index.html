@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#07101d">
 <title>Dashboard · FINTRACK</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.tailwindcss.com"></script>
+<script nonce="{{ g.csp_nonce }}">tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
@@ -159,7 +159,7 @@
 <footer class="dashboard-footer">FINTRACK · Persoonlijk financieel overzicht</footer>
 </main>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
 const months={{month_names|tojson}}, incomes={{income_values|tojson}}, expenses={{expense_values|tojson}};
 new Chart(document.getElementById("yearChart"),{type:"bar",data:{labels:months,datasets:[{label:"Inkomsten (€)",data:incomes},{label:"Uitgaven (€)",data:expenses}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:{x:{ticks:{color:"#94a3b8",maxRotation:0,autoSkip:true},grid:{display:false}},y:{beginAtZero:true,ticks:{color:"#94a3b8"},grid:{color:"#263449"}}},plugins:{legend:{position:"top",labels:{color:"#cbd5e1",boxWidth:12,usePointStyle:true}}}}});
 const c=document.getElementById("categoryChart");if(c)new Chart(c,{type:"doughnut",data:{labels:{{category_labels|tojson}},datasets:[{data:{{category_values|tojson}}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#cbd5e1",boxWidth:12,usePointStyle:true}}}}});
