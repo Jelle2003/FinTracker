@@ -1225,9 +1225,11 @@ def market():
         selected_date = date.today()
     topic = " ".join((request.args.get("q") or "").split())[:100]
     news = market_news(topic=topic, selected_date=selected_date)
+    snapshot = market_snapshot()
     return render_template(
         "market.html",
         news=news,
+        snapshot=snapshot,
         selected_date=selected_date.isoformat(),
         topic=topic
     )
