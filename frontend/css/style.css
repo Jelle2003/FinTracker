@@ -1152,3 +1152,17 @@ body.theme-dark .login-page{background:#07101d!important}
 body.theme-dark .login-card{background:linear-gradient(145deg,rgba(18,30,48,.96),rgba(11,21,35,.98));border-color:rgba(71,92,120,.55)}
 body.theme-dark .login-input-wrap input{background:#091421!important;color:#f1f5f9!important;border-color:#27384e!important}
 body.theme-dark .login-security{border-color:#1f3044;background:rgba(7,16,28,.5)}
+
+/* Native dashboard charts — no external chart library required */
+.native-chart{display:block;width:100%;height:100%;overflow:visible}
+.native-chart-legend{display:flex;justify-content:flex-start;gap:18px;flex-wrap:wrap;margin-top:4px;padding:0 4px;color:var(--muted);font-size:.72rem;font-weight:650}
+.native-chart-legend span{display:inline-flex;align-items:center;gap:7px}
+.native-chart-legend i,.native-donut-legend i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.native-donut{display:block;width:100%;height:220px;max-width:320px;margin:0 auto;overflow:visible}
+.native-donut-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin-top:6px;color:var(--muted);font-size:.68rem}
+.native-donut-legend span{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.native-donut-legend b{margin-left:auto;font-weight:700;color:var(--text)}
+@media(max-width:760px){
+  .native-donut{height:210px}
+  .native-donut-legend{grid-template-columns:1fr}
+}
