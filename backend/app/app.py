@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, flash, redirect, Response
+from flask import Flask, render_template, request, url_for, flash, redirect, Response, session
 from datetime import date, datetime, date as dt_date
 import os
 import json
@@ -260,6 +260,46 @@ def register():
         return redirect(url_for("index"))
 
     return render_template("register.html", username=username)
+
+@app.route("/account", methods=["GET", "POST"])
+@login_required
+@limiter.limit("5 per minute", methods=["POST"])
+def account():
+    if request.method == "POST":
+        current_password = request.form.get("current_password") or ""
+        new_password = request.form.get("new_password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not current_user.check_password(current_password):
+            flash("Je huidige wachtwoord is niet correct.", "error")
+            return render_template("account.html")
+
+        if len(new_password) < 12 or len(new_password) > 128:
+            flash("Gebruik een nieuw wachtwoord van 12 tot 128 tekens.", "error")
+            return render_template("account.html")
+
+        if new_password != confirm_password:
+            flash("De nieuwe wachtwoorden komen niet overeen.", "error")
+            return render_template("account.html")
+
+        if new_password == current_password:
+            flash("Kies een nieuw wachtwoord dat verschilt van je huidige wachtwoord.", "error")
+            return render_template("account.html")
+
+        user = db.session.get(User, current_user.id)
+        user.set_password(new_password)
+        db.session.commit()
+
+        # Rotate the authenticated session after a credential change.
+        logout_user()
+        session.clear()
+        login_user(user)
+
+        flash("Je wachtwoord is succesvol gewijzigd.", "success")
+        return redirect(url_for("account"))
+
+    return render_template("account.html")
+
 
 @app.route("/logout", methods=["POST"])
 @login_required
