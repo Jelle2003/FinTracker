@@ -8,6 +8,10 @@ import xml.etree.ElementTree as ET
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .database import db
 from .models import User, Expense, Income, Investment
@@ -20,9 +24,76 @@ app = Flask(
     static_url_path="/css"
 )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///expenses.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = "my-secret-key"
+# Security configuration. The secret is deliberately required from the
+# environment so it can never be accidentally committed to GitHub.
+secret_key = os.environ.get("FINTRACK_SECRET_KEY")
+if not secret_key or len(secret_key) < 32:
+    raise RuntimeError(
+        "FINTRACK_SECRET_KEY must be set to a random value of at least 32 characters."
+    )
+
+trusted_hosts = [
+    host.strip()
+    for host in os.environ.get(
+        "FINTRACK_TRUSTED_HOSTS",
+        "fintrackerjelle.duckdns.org,localhost,127.0.0.1"
+    ).split(",")
+    if host.strip()
+]
+
+app.config.update(
+    SQLALCHEMY_DATABASE_URI="sqlite:///expenses.db",
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SECRET_KEY=secret_key,
+    TRUSTED_HOSTS=trusted_hosts,
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    REMEMBER_COOKIE_SECURE=True,
+    REMEMBER_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SAMESITE="Lax",
+    PERMANENT_SESSION_LIFETIME=1800,
+    SESSION_REFRESH_EACH_REQUEST=True,
+)
+
+# nginx terminates HTTPS before forwarding the request to Gunicorn.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+csrf = CSRFProtect(app)
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri=os.environ.get("FINTRACK_RATE_LIMIT_STORAGE", "memory://"),
+)
+
+
+@app.after_request
+def add_security_headers(response):
+    """Add browser-side security controls to every response."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    )
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'; "
+        "object-src 'none'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' https: data:; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+        "connect-src 'self'; "
+    )
+    if request.is_secure:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 
 db.init_app(app)
 
@@ -110,6 +181,7 @@ def parse_date_or_none(s: str):
 # ============================================================
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
 def login():
 
     if current_user.is_authenticated:
@@ -146,6 +218,7 @@ def login():
 
 
 @app.route("/register", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
@@ -188,7 +261,7 @@ def register():
 
     return render_template("register.html", username=username)
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 @login_required
 def logout():
 
@@ -777,6 +850,7 @@ def investment_search(query):
 
 
 @app.route("/api/investing/search")
+@limiter.limit("30 per minute")
 @login_required
 def investment_search_api():
     query = (request.args.get("q") or "").strip()
@@ -955,6 +1029,7 @@ def market():
 
 @app.route("/ai-investor", methods=["GET", "POST"])
 @login_required
+@limiter.limit("10 per minute", methods=["POST"])
 def ai_investor():
     answer = None
     question = ""
