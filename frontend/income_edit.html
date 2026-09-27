@@ -59,7 +59,7 @@
 
                 <div class="form-field">
                     <label for="amount">Bedrag</label>
-                    <div class="input-prefix"><span>€</span><input id="amount" type="number" step="0.01" min="0.01" name="amount" value="{{ income.amount }}" required></div>
+                    <div class="input-prefix"><span>{{ currency_symbol }}</span><input id="amount" type="number" step="0.01" min="0.01" name="amount" value="{{ money_value(income.amount) }}" required></div>
                 </div>
 
                 <div class="form-field">
