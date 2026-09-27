@@ -15,7 +15,7 @@
 <button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button>
 <nav id="primary-nav" class="primary-nav">
 <a href="{{url_for('index')}}">Overzicht</a><div class="nav-group"><span class="nav-group-label">Beheer</span><a href="{{url_for('income')}}">Inkomsten</a><a href="{{url_for('expenses')}}">Uitgaven</a></div>
-<a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><form method="post" action="{{url_for('logout')}}" class="nav-logout-form">{{ csrf_token() }}<button type="submit" class="nav-logout">Afmelden</button></form>
+<a href="{{url_for('investing')}}">Beleggen</a><a href="{{url_for('market')}}">Markt & Nieuws</a><a href="{{url_for('ai_investor')}}">AI Adviseur</a><a href="{{url_for('account')}}">Account</a><form method="post" action="{{url_for('logout')}}" class="nav-logout-form">{{ csrf_token() }}<button type="submit" class="nav-logout">Afmelden</button></form>
 </nav></div></header>
 
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}
