@@ -6,7 +6,7 @@ import secrets
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
 from sqlalchemy.exc import IntegrityError
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
@@ -949,6 +949,9 @@ def add_income():
     try:
         amount = float(amount_str)
         if amount <= 0:
+            raise ValueError
+        amount = convert_amount(amount, current_user.currency, "EUR")
+        if amount is None:
             raise ValueError
     except ValueError:
         flash("Amount must be a positive number.", "error")
