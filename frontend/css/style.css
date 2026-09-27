@@ -857,3 +857,153 @@ footer{
   .nav-group{padding-left:3px}
   .brand-mark{font-size:1.05rem}
 }
+
+
+/* ============================================================
+   FINTRACK APP SHELL + FORM PAGES
+   Keeps secondary pages visually consistent with the dashboard.
+   ============================================================ */
+.app-shell{
+  width:100%;
+  max-width:1280px;
+  margin:0 auto;
+  padding:28px 24px 48px;
+}
+.app-shell .site-header{width:100%}
+.form-page{
+  max-width:920px;
+  margin:0 auto;
+}
+.page-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin:4px 0 22px;
+}
+.page-heading h1{
+  margin:5px 0 4px;
+  font-size:2rem;
+  line-height:1.1;
+}
+.page-heading p:not(.page-eyebrow){
+  margin:0;
+  color:var(--muted);
+  font-size:.84rem;
+}
+.page-eyebrow{
+  margin:0;
+  color:#67c9f5;
+  font-size:.65rem;
+  font-weight:800;
+  letter-spacing:.13em;
+}
+.page-back-link{
+  flex:0 0 auto;
+  padding:9px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:#a9bfd3;
+  background:var(--surface);
+  font-size:.74rem;
+  font-weight:650;
+}
+.page-back-link:hover{
+  background:var(--surface-2);
+  border-color:var(--border-light);
+  transform:translateY(-1px);
+}
+.form-card{
+  max-width:760px;
+  margin:0 auto;
+  padding:26px;
+  border:1px solid var(--border)!important;
+  border-radius:20px!important;
+  background:linear-gradient(145deg,var(--surface),var(--bg-soft))!important;
+  box-shadow:var(--shadow)!important;
+}
+.app-form{display:grid;gap:18px}
+.form-field{min-width:0}
+.form-field label{
+  display:block;
+  margin:0 0 7px;
+  color:#d7e1eb;
+  font-size:.76rem;
+  font-weight:700;
+}
+.form-field input,
+.form-field select,
+.form-field textarea{
+  width:100%;
+  min-height:46px;
+  padding:0 13px!important;
+}
+.input-prefix{position:relative}
+.input-prefix>span{
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#647b92;
+  font-size:.82rem;
+  pointer-events:none;
+  z-index:2;
+}
+.input-prefix input{padding-left:30px!important}
+.form-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.form-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding-top:4px;
+}
+.form-primary-button,
+.form-secondary-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  min-height:44px;
+  padding:0 15px;
+  border-radius:11px!important;
+  font-size:.76rem;
+  font-weight:750;
+}
+.form-primary-button{
+  border:1px solid rgba(125,211,252,.35)!important;
+  background:linear-gradient(135deg,#38bdf8,#0ea5e9)!important;
+  color:#03111d!important;
+  box-shadow:0 10px 24px rgba(14,165,233,.14);
+}
+.form-secondary-button{
+  border:1px solid var(--border)!important;
+  background:var(--surface-2)!important;
+  color:#aebdcd!important;
+}
+.form-primary-button:hover,.form-secondary-button:hover{
+  transform:translateY(-1px);
+}
+@media(max-width:800px){
+  .app-shell{padding:18px 14px 34px}
+  .page-heading{align-items:flex-start;flex-direction:column;gap:14px}
+  .page-heading h1{font-size:1.7rem}
+  .page-back-link{width:100%;text-align:center}
+  .form-card{padding:20px 17px;border-radius:17px!important}
+}
+@media(max-width:560px){
+  .form-grid-2{grid-template-columns:1fr}
+  .form-actions{flex-direction:column}
+  .form-primary-button,.form-secondary-button{width:100%}
+}
+@media(prefers-color-scheme:light){
+  .page-eyebrow{color:#0369a1}
+  .page-back-link{background:#fff;color:#475569}
+  .form-card{background:linear-gradient(145deg,#fff,#f7fafc)!important}
+  .form-field label{color:#334155}
+  .form-primary-button{color:#fff!important}
+  .form-secondary-button{background:#f1f5f9!important;color:#475569}
+}
