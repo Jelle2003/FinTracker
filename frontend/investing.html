@@ -125,10 +125,11 @@
 <input type="hidden" name="symbol" id="investment-symbol" required>
 <input type="hidden" name="name" id="investment-name" required>
 <input type="hidden" name="asset_type" id="investment-type" value="Andere">
+<input type="hidden" name="currency" id="investment-currency" value="">
 
 <div class="investment-form-grid">
 <label class="block text-sm">Aantal<input name="quantity" type="number" step="0.000001" min="0.000001" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2" placeholder="Bijv. 3"></label>
-<label class="block text-sm">Aankoopprijs per stuk<input name="average_price" type="number" step="0.01" min="0" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2" placeholder="Bijv. 150"></label>
+<label class="block text-sm" id="average-price-label">Aankoopprijs per stuk<input name="average_price" type="number" step="0.01" min="0" required class="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 p-2" placeholder="Bijv. 150"></label>
 </div>
 <button id="investment-submit" disabled class="investment-submit w-full rounded-xl px-4 py-2">Belegging toevoegen <span>→</span></button>
 </form>
@@ -144,6 +145,7 @@
  const form=document.getElementById("investment-form"), submit=document.getElementById("investment-submit");
  const selected=document.getElementById("selected-investment"), symbol=document.getElementById("investment-symbol"), name=document.getElementById("investment-name"), type=document.getElementById("investment-type");
  const selectedName=document.getElementById("selected-name"), selectedMeta=document.getElementById("selected-meta"), icon=document.getElementById("selected-icon"), clear=document.getElementById("clear-selection");
+ const currency=document.getElementById("investment-currency"), priceLabel=document.getElementById("average-price-label");
  let timer=null, controller=null, activeResults=[];
  function setResults(items){
    activeResults=items; results.innerHTML="";
@@ -158,17 +160,30 @@
    });
    results.hidden=false; input.setAttribute("aria-expanded","true");
  }
- function selectItem(item){
+ async function selectItem(item){
    symbol.value=item.symbol; name.value=item.name; type.value=item.asset_type||"Andere";
+   currency.value=""; submit.disabled=true;
    input.value=item.symbol+" · "+item.name;
    selectedName.textContent=item.name;
    selectedMeta.textContent=[item.symbol,item.asset_type,item.exchange].filter(Boolean).join(" · ");
    icon.textContent=(item.symbol||"A").slice(0,1);
    selected.hidden=false; results.hidden=true; input.setAttribute("aria-expanded","false");
-   submit.disabled=false; input.classList.add("is-selected");
+   try{
+     const response=await fetch("/api/investing/quote?symbol="+encodeURIComponent(item.symbol),{headers:{"Accept":"application/json"}});
+     if(!response.ok)throw new Error("quote");
+     const quote=await response.json();
+     currency.value=quote.currency||"";
+     priceLabel.childNodes[0].textContent="Aankoopprijs per stuk ("+(quote.currency||"")+")";
+     submit.disabled=!currency.value;
+   }catch(error){
+     currency.value="";
+     priceLabel.childNodes[0].textContent="Aankoopprijs per stuk";
+     selectedMeta.textContent+=" · actuele valuta niet beschikbaar";
+   }
+   input.classList.add("is-selected");
  }
  function clearSelection(){
-   symbol.value=""; name.value=""; type.value="Andere"; input.value="";
+   symbol.value=""; name.value=""; type.value="Andere"; currency.value=""; input.value=""; priceLabel.childNodes[0].textContent="Aankoopprijs per stuk";
    selected.hidden=true; results.hidden=true; submit.disabled=true; input.classList.remove("is-selected"); input.focus();
  }
  clear.addEventListener("click",clearSelection);
