@@ -767,6 +767,9 @@ def add():
 
         if amount <= 0:
             raise ValueError
+        amount = convert_amount(amount, current_user.currency, "EUR")
+        if amount is None:
+            raise ValueError
 
     except ValueError:
         flash(
@@ -881,6 +884,9 @@ def edit_post(expense_id):
 
         if amount <= 0:
             raise ValueError
+        amount = convert_amount(amount, current_user.currency, "EUR")
+        if amount is None:
+            raise ValueError
 
     except ValueError:
         flash(
@@ -978,6 +984,9 @@ def add_income():
         amount = convert_amount(amount, current_user.currency, "EUR")
         if amount is None:
             raise ValueError
+        amount = convert_amount(amount, current_user.currency, "EUR")
+        if amount is None:
+            raise ValueError
     except ValueError:
         flash("Amount must be a positive number.", "error")
         return redirect(url_for("income"))
@@ -1051,6 +1060,9 @@ def edit_income_post(income_id):
     try:
         amount = float(amount_str)
         if amount <= 0:
+            raise ValueError
+        amount = convert_amount(amount, current_user.currency, "EUR")
+        if amount is None:
             raise ValueError
     except ValueError:
         flash("Amount must be a positive number.", "error")
