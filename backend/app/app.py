@@ -1381,7 +1381,16 @@ def market_price(symbol):
         meta = result.get("meta", {})
         price = meta.get("regularMarketPrice")
         currency = meta.get("currency", "")
-        return {"price": float(price), "currency": currency} if price is not None else None
+        if price is None:
+            return None
+
+        # Yahoo can quote London-listed assets in pence ("GBp").
+        # FINTRACK normalizes that to pounds so currency conversion stays consistent.
+        if currency == "GBp":
+            price = float(price) / 100
+            currency = "GBP"
+
+        return {"price": float(price), "currency": currency}
     except Exception:
         return None
 
