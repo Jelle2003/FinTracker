@@ -1652,6 +1652,59 @@ def gemini_chat(prompt, model=None):
     return (getattr(response, "text", None) or "").strip()
 
 
+@app.route("/investing/add", methods=["POST"])
+@login_required
+def add_investment():
+    """Add a portfolio position using the quote selected in the investment search."""
+    symbol = (request.form.get("symbol") or "").strip().upper()
+    name = (request.form.get("name") or "").strip()
+    asset_type = (request.form.get("asset_type") or "Andere").strip()[:30]
+    currency = (request.form.get("currency") or "").strip().upper()
+    sector = (request.form.get("sector") or "").strip()[:60] or None
+    region = (request.form.get("region") or "").strip()[:40] or None
+
+    try:
+        quantity = float((request.form.get("quantity") or "0").replace(",", "."))
+        average_price = float((request.form.get("average_price") or "0").replace(",", "."))
+    except ValueError:
+        flash("Vul geldige cijfers in voor aantal en aankoopprijs.", "error")
+        return redirect(url_for("investing"))
+
+    if not symbol or not name or not currency or len(currency) != 3:
+        flash("Selecteer eerst een geldige belegging uit de zoekresultaten.", "error")
+        return redirect(url_for("investing"))
+
+    if quantity <= 0 or average_price < 0:
+        flash("Aantal moet groter zijn dan 0 en de aankoopprijs mag niet negatief zijn.", "error")
+        return redirect(url_for("investing"))
+
+    quote = market_price(symbol)
+    if not quote:
+        flash("De actuele koers van deze belegging kon niet worden opgehaald. Probeer opnieuw.", "error")
+        return redirect(url_for("investing"))
+
+    if quote["currency"].upper() != currency:
+        flash("De valuta van de geselecteerde koers klopt niet. Selecteer de belegging opnieuw.", "error")
+        return redirect(url_for("investing"))
+
+    investment = Investment(
+        user_id=current_user.id,
+        symbol=symbol,
+        name=name[:120],
+        asset_type=asset_type,
+        quantity=quantity,
+        average_price=average_price,
+        currency=currency,
+        sector=sector,
+        region=region,
+    )
+    db.session.add(investment)
+    db.session.commit()
+
+    flash(f"{symbol} is aan je portefeuille toegevoegd.", "success")
+    return redirect(url_for("investing"))
+
+
 @app.route("/investing")
 @login_required
 def investing():
