@@ -12,7 +12,7 @@ FINTRACK ondersteunt automatisch een **licht en donker thema** op basis van de s
 
 De registratie bevat server-side validatie, controle op dubbele gebruikersnamen, een bevestiging van het wachtwoord en directe login na een succesvolle registratie. De browser controleert de wachtwoordbevestiging ook voordat het formulier wordt verzonden.
 
-> **Belangrijk:** de huidige financiële tabellen zijn nog niet per gebruiker afgeschermd. Registratie is daarom nog niet bedoeld als volledige multi-user/privacy-oplossing. Voeg gebruikersgebonden data-isolatie en een database-migratie toe voordat meerdere personen FINTRACK met eigen financiële gegevens gebruiken.
+> **Multi-user:** inkomsten, uitgaven en beleggingen zijn nu gekoppeld aan het ingelogde account. Bij een bestaande SQLite-database wordt tijdens de upgrade automatisch een `user_id` toegevoegd en worden bestaande records aan het eerste bestaande account gekoppeld. Maak altijd een back-up van `expenses.db` vóór een productie-update.
 
 ## Functies
 
