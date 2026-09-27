@@ -41,7 +41,7 @@
             {% endwith %}
 
             <form method="post" class="login-form">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="login-field">
                     <label for="current_password">Huidig wachtwoord</label>
                     <div class="login-input-wrap">
