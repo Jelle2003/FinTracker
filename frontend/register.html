@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#08111f">
+    <title>Account aanmaken · FINTRACK</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-shell">
+        <div class="login-brand" aria-label="FINTRACK">
+            <div class="login-logo">F</div>
+            <div>
+                <div class="login-wordmark"><span>FIN</span>TRACK</div>
+                <div class="login-brand-subtitle">Personal finance, simplified.</div>
+            </div>
+        </div>
+
+        <main class="login-card" aria-labelledby="register-title">
+            <div class="login-card-top">
+                <div>
+                    <p class="login-eyebrow">NIEUW BIJ FINTRACK?</p>
+                    <h1 id="register-title">Maak je account aan</h1>
+                    <p class="login-description">Registreer om je persoonlijke financiële overzicht te gebruiken.</p>
+                </div>
+                <div class="login-shield" aria-hidden="true">＋</div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="login-messages" aria-live="polite">
+                        {% for category, message in messages %}
+                            <div class="login-message {% if category == 'success' %}is-success{% else %}is-error{% endif %}">
+                                <span class="login-message-icon" aria-hidden="true">{% if category == 'success' %}✓{% else %}!{% endif %}</span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="login-form">
+                <div class="login-field">
+                    <label for="username">Gebruikersnaam</label>
+                    <div class="login-input-wrap">
+                        <input type="text" id="username" name="username" required minlength="3" maxlength="80"
+                               autocomplete="username" autocapitalize="none" placeholder="Kies een gebruikersnaam">
+                    </div>
+                </div>
+                <div class="login-field">
+                    <label for="password">Wachtwoord</label>
+                    <div class="login-input-wrap">
+                        <input type="password" id="password" name="password" required minlength="10"
+                               autocomplete="new-password" placeholder="Minstens 10 tekens">
+                    </div>
+                </div>
+                <div class="login-field">
+                    <label for="confirm_password">Herhaal wachtwoord</label>
+                    <div class="login-input-wrap">
+                        <input type="password" id="confirm_password" name="confirm_password" required minlength="10"
+                               autocomplete="new-password" placeholder="Typ je wachtwoord opnieuw">
+                    </div>
+                </div>
+                <button type="submit" class="login-submit">
+                    <span>Account aanmaken</span><span aria-hidden="true">→</span>
+                </button>
+            </form>
+            <p class="login-description" style="text-align:center;margin-top:20px">
+                Heb je al een account? <a href="{{ url_for('login') }}">Log hier in</a>
+            </p>
+        </main>
+        <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
+    </div>
+</body>
+</html>
