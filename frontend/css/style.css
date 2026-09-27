@@ -1037,7 +1037,8 @@ footer{
 .theme-toggle-icon{font-size:.9rem;line-height:1}
 .theme-toggle-label{white-space:nowrap}
 @media(max-width:800px){
-  .theme-toggle{top:12px;right:12px;min-height:36px;padding:0 10px}
+  /* Keep the theme switch beside the hamburger instead of underneath it. */
+  .theme-toggle{top:12px;right:62px;min-height:36px;padding:0 10px}
   .theme-toggle-label{display:none}
 }
 
