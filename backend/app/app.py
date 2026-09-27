@@ -245,7 +245,11 @@ def money_value(value, from_currency="EUR"):
 
 @app.context_processor
 def inject_currency():
-    return currency_info()
+    return {
+        **currency_info(),
+        "money": money,
+        "money_value": money_value,
+    }
 
 
 def owned_query(model):
