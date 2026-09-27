@@ -25,6 +25,247 @@ FINTRACK is een moderne persoonlijke financiële webapp waarmee je inkomsten, ui
 - **Valuta:** gebruikers kunnen EUR, USD of GBP kiezen; bedragen worden waar mogelijk omgerekend met actuele wisselkoersen.
 - **Security:** CSRF, rate limiting, veilige cookies, CSP, security headers, trusted hosts en verplichte externe secret key.
 
+
+## Gebruikershandleiding — FINTRACK gebruiken
+
+FINTRACK is opgebouwd als één financieel overzicht. De bedoeling is dat je eerst je financiële basis invult en daarna stap voor stap je inkomsten, uitgaven, spaardoelen en vermogen bijhoudt. Hoe vollediger de gegevens, hoe nuttiger het dashboard, de alerts en de AI-adviseur worden.
+
+### 1. Eerste keer starten
+
+1. Open FINTRACK en maak een account aan.
+2. Log in.
+3. Ga naar **Meer → Account**.
+4. Vul indien gewenst je weergavenaam en e-mailadres in.
+5. Kies je **voorkeursvaluta**: EUR, USD of GBP.
+6. Stel je **risicoprofiel** en **beleggingshorizon** in.
+7. Vul je **maandelijkse beleggingsbudget** en **noodfondsdoel** in als je deze functies wilt gebruiken.
+8. Kies eventueel je thema en avatar-kleur.
+
+Deze gegevens vormen de persoonlijke context voor verschillende onderdelen van FINTRACK en voor de AI-adviseur.
+
+### 2. Je dashboard begrijpen
+
+**Overzicht** is je startpunt. Hier zie je onder andere:
+
+- inkomsten;
+- uitgaven;
+- netto saldo;
+- spaarpercentage;
+- spaardoelen;
+- portefeuillewaarde en rendement;
+- financiële inzichten;
+- recente transacties;
+- grafieken.
+
+Gebruik het dashboard vooral als controlecentrum. De onderliggende pagina's zijn bedoeld om gegevens correct in te voeren en uitgebreider te bekijken.
+
+### 3. Inkomsten toevoegen
+
+Ga naar **Financiën → Inkomsten**.
+
+Voeg bijvoorbeeld toe:
+
+- loon;
+- vakantiegeld;
+- terugbetalingen;
+- freelance-inkomsten;
+- andere inkomsten.
+
+Vul het bedrag, de datum en de categorie zo correct mogelijk in. Nieuwe bedragen worden volgens je gekozen accountvaluta verwerkt en intern naar EUR omgerekend wanneer dat nodig is.
+
+### 4. Uitgaven toevoegen
+
+Ga naar **Financiën → Uitgaven**.
+
+Registreer je uitgaven zo consequent mogelijk. Denk bijvoorbeeld aan:
+
+- huur of woonkosten;
+- boodschappen;
+- vervoer;
+- abonnementen;
+- vrije tijd;
+- verzekeringen;
+- andere vaste of variabele kosten.
+
+Goede categorieën maken de grafieken, inzichten en alerts veel bruikbaarder.
+
+### 5. Transacties controleren
+
+Ga naar **Financiën → Transacties** om inkomsten en uitgaven samen te bekijken.
+
+Je kunt hier:
+
+- zoeken op omschrijving;
+- filteren op type;
+- filteren op categorie;
+- filteren op begin- en einddatum;
+- terugkerende patronen herkennen;
+- de huidige selectie exporteren naar CSV.
+
+De CSV-export gebruikt de actieve filters. Je krijgt dus niet automatisch alle transacties wanneer je een selectie hebt gemaakt.
+
+### 6. Spaardoelen instellen
+
+Ga naar **Spaardoelen**.
+
+Maak bijvoorbeeld doelen aan voor:
+
+- noodfonds;
+- vakantie;
+- auto;
+- woning;
+- grote aankoop;
+- andere persoonlijke doelen.
+
+Geef een doel een naam, doelbedrag en eventueel een deadline. Daarna kun je bedragen toevoegen en de voortgang opvolgen.
+
+FINTRACK berekent bij doelen met een deadline ook hoeveel je ongeveer per maand moet opzijzetten om het resterende bedrag tegen die deadline te bereiken.
+
+**Praktische werkwijze:** gebruik spaardoelen voor geld dat je op een bepaalde termijn nodig hebt. Geld voor een doel op korte termijn hoeft niet automatisch als beleggingsgeld te worden beschouwd.
+
+### 7. Beleggingen toevoegen
+
+Ga naar **Vermogen → Beleggen**.
+
+#### Nieuwe portefeuillepositie
+
+Gebruik de zoekfunctie bij het toevoegen van een belegging.
+
+1. Typ een bedrijfsnaam, fondsnaam of ticker, bijvoorbeeld Apple, AAPL of VWCE.
+2. Kies de juiste belegging uit de zoekresultaten.
+3. Controleer de geselecteerde naam, ticker en valuta.
+4. Vul het aantal en je gemiddelde aankoopprijs in.
+5. Kies indien beschikbaar een sector en regio.
+6. Klik op **Opslaan**.
+
+De zoekfunctie is bewust belangrijk: typ niet zomaar een ticker uit het hoofd wanneer je niet zeker bent. Door de juiste zoekresultaten te selecteren verklein je de kans dat je een verkeerde belegging registreert.
+
+De actuele koers wordt door FINTRACK opgehaald wanneer marktdata beschikbaar is. Als de koers niet beschikbaar is, wordt dat in de applicatie aangegeven.
+
+### 8. Beleggingslogboek gebruiken
+
+Op de Beleggen-pagina kun je daarnaast activiteiten registreren:
+
+- **Aankoop** — vul aantal en prijs per stuk in;
+- **Verkoop** — vul aantal en prijs per stuk in;
+- **Dividend** — vul het ontvangen bedrag in.
+
+Bij **Belegging / ticker** kun je de naam of ticker intypen en een resultaat uit de zoekhulp kiezen. Dit is de veiligste manier om de juiste ticker te gebruiken.
+
+De datum en een optionele notitie kunnen extra context geven, bijvoorbeeld maandelijkse aankoop of dividend Q2.
+
+### 9. Portefeuille-analytics lezen
+
+FINTRACK toont naast je posities ook analyses van:
+
+- assetverdeling;
+- sectorverdeling;
+- regioverdeling;
+- rendement;
+- ontvangen dividend;
+- recente beleggingsactiviteiten.
+
+Bij opvallende rendementen kunnen review-signalen verschijnen. Deze signalen zijn bedoeld om je positie opnieuw te bekijken en zijn geen automatische koop- of verkooporders.
+
+### 10. Markt & Nieuws
+
+Ga naar **Vermogen → Markt & Nieuws**.
+
+Hier vind je onder andere:
+
+- belangrijke beursindexen;
+- crypto;
+- valuta;
+- grondstoffen;
+- relevante financiële nieuwsartikelen.
+
+Je kunt nieuws op datum en onderwerp bekijken. Marktdata en nieuws zijn externe gegevens en kunnen vertraagd, tijdelijk niet beschikbaar of onvolledig zijn.
+
+Gebruik deze pagina als informatiebron en controleer belangrijke informatie bij de oorspronkelijke bron voordat je financiële beslissingen neemt.
+
+### 11. Alerts
+
+Ga naar **Meer → Alerts**.
+
+FINTRACK kan aandachtspunten tonen rond bijvoorbeeld:
+
+- uitgaven die hoger zijn dan inkomsten;
+- een hoge verhouding van uitgaven tegenover inkomsten;
+- spaardoelen waarvan de deadline dichtbij komt;
+- verlopen spaardoelen;
+- een sterk geconcentreerde portefeuille;
+- de verhouding tussen je noodfonds en je ingestelde doel.
+
+Een alert betekent dat iets aandacht verdient; het is geen automatische conclusie dat je iets moet kopen, verkopen of wijzigen.
+
+### 12. AI Adviseur optimaal gebruiken
+
+Ga naar **AI Adviseur**.
+
+De AI kan je financiële gegevens combineren met je profiel, spaardoelen, portefeuille, marktdata en relevant nieuws.
+
+Voor goede antwoorden kun je concrete vragen stellen, bijvoorbeeld:
+
+- Hoe staat mijn financiële situatie ervoor ten opzichte van mijn spaardoelen?
+- Welke posities in mijn portefeuille verdienen een extra review en waarom?
+- Hoe verhoudt mijn maandelijkse beleggingsbudget zich tot mijn noodfonds en spaardoelen?
+- Welke risico's zie je in de spreiding van mijn portefeuille?
+- Wat zijn mogelijke scenario's als ik mijn maandelijkse investering verhoog?
+
+De AI is een analyse- en hulpmiddel. Controleer actuele koersen, nieuws en belangrijke financiële informatie altijd zelf. De AI geeft geen gegarandeerde rendementen of automatische handelsorders.
+
+### 13. Account en beveiliging
+
+Gebruik **Meer → Account** om je profiel en wachtwoord te beheren.
+
+FINTRACK gebruikt onder andere:
+
+- gehashte wachtwoorden;
+- CSRF-bescherming;
+- rate limiting;
+- beveiligde cookies;
+- security headers;
+- per-gebruiker afgeschermde financiële gegevens.
+
+De administrator ziet het beheer onder **Meer → Admin**. Gewone gebruikers zien deze optie niet.
+
+### 14. Een goede dagelijkse/wekelijkse routine
+
+Voor een zo correct mogelijke FINTRACK-administratie:
+
+**Dagelijks of wanneer nodig**
+1. Voeg belangrijke inkomsten en uitgaven toe.
+2. Registreer beleggingsactiviteiten wanneer je een aankoop, verkoop of dividend ontvangt.
+
+**Wekelijks**
+1. Controleer je transacties.
+2. Kijk naar Alerts.
+3. Controleer je spaardoelen.
+4. Bekijk je portefeuille en eventuele review-signalen.
+
+**Maandelijks**
+1. Controleer je inkomsten en uitgaven.
+2. Kijk naar je vrije cashflow.
+3. Controleer of je spaardoelen nog realistisch zijn.
+4. Bekijk je beleggingsbudget en portefeuilleverdeling.
+5. Gebruik de AI-adviseur voor een bredere analyse.
+
+### 15. Mobiel gebruiken
+
+FINTRACK is responsive ontworpen. Op een smartphone wordt de navigatie automatisch een hamburger-menu.
+
+Dezelfde account en gegevens zijn beschikbaar op desktop en mobiel. Gebruik op mobiel vooral de compacte navigatie en controleer bij lange formulieren of alle velden correct zijn ingevuld voordat je opslaat.
+
+### 16. Belangrijk om te onthouden
+
+FINTRACK werkt het best wanneer de gegevens **actueel, volledig en consequent** worden bijgehouden.
+
+De belangrijkste volgorde is:
+
+**Account instellen → inkomsten/uitgaven bijhouden → spaardoelen instellen → portefeuille registreren → markt & alerts controleren → AI gebruiken voor analyse.**
+
+FINTRACK ondersteunt je bij het begrijpen van je financiële situatie. Het vervangt geen bank, boekhouder, financieel adviseur of officiële marktbron.
+
 ## FINTRACK 2.0
 
 FINTRACK probeert financiële onderdelen niet als losse pagina's te behandelen, maar als één geheel.
