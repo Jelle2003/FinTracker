@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, url_for, flash, redirect, Response, session, g
-from datetime import date, datetime, date as dt_date
+from datetime import date, datetime, timedelta
 import os
 import json
 import secrets
@@ -124,9 +124,8 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# Create database tables and safely upgrade older SQLite databases.
-# Existing financial records are assigned to the first existing account so
-# upgrading a single-user installation does not lose its data.
+# Maak de tabellen aan en voer kleine migraties uit voor oudere databases.
+# Bestaande gegevens blijven gekoppeld aan de eerste gebruiker.
 with app.app_context():
     db.create_all()
 
@@ -259,7 +258,7 @@ def login():
         next_page = request.args.get("next")
         parsed_next = urllib.parse.urlparse(next_page or "")
 
-        # Only allow local relative redirects; block //host and absolute URLs.
+        # Alleen lokale redirects zijn toegestaan; externe URLs worden geblokkeerd.
         if (
             next_page
             and parsed_next.scheme == ""
@@ -768,7 +767,7 @@ def edit(expense_id):
         "edit.html",
         expense=expense,
         categories=CATEGORIES,
-        today=dt_date.today().isoformat()
+        today=date.today().isoformat()
     )
 
 
@@ -1130,7 +1129,7 @@ def _news_relevance(title, description=""):
 def _google_news_items(query, selected_date=None):
     date_filter = ""
     if selected_date:
-        next_day = selected_date + __import__("datetime").timedelta(days=1)
+        next_day = selected_date + timedelta(days=1)
         date_filter = f" after:{selected_date.isoformat()} before:{next_day.isoformat()}"
     encoded = urllib.parse.quote((query + date_filter)[:450])
     data = fetch_url(
@@ -1196,10 +1195,8 @@ def _yahoo_news_items(query):
 
 
 def market_news(topic=None, selected_date=None):
-    # Google News is the broad historical discovery layer; Yahoo Finance
-    # adds finance-specific articles and market coverage. Google Finance
-    # itself does not expose a public news API for third-party apps, so we
-    # provide direct Google Finance links in the UI rather than scraping it.
+    # Google News levert historische resultaten; Yahoo Finance vult die aan
+    # met financieel nieuws. We gebruiken geen scraping van Google Finance.
     clean_topic = " ".join((topic or "").split())[:100]
     queries = [
         "aandelen OR aandelenmarkt OR beurs OR economie OR ETF OR crypto OR rente",
@@ -1215,9 +1212,7 @@ def market_news(topic=None, selected_date=None):
     # Yahoo Finance is especially useful for finance-specific headlines.
     items.extend(_yahoo_news_items(clean_topic or "stock market finance"))
 
-    # A single date is strict: Yahoo's current feed is filtered to that date
-    # when it contains matching timestamps; Google News is the historical
-    # source used to ensure date selection actually works.
+    # Bij een gekozen datum houden we alleen nieuws van die exacte datum over.
     if selected_date:
         items = [
             item for item in items
@@ -1239,8 +1234,7 @@ def market_news(topic=None, selected_date=None):
             continue
         unique.append(item)
 
-    # Final presentation is chronological: newest first. The relevance
-    # score is only used to remove obvious low-value clickbait/noise.
+    # Toon uiteindelijk het nieuwste nieuws eerst; de score filtert vooral ruis.
     unique.sort(key=lambda x: x.get("published_iso", ""), reverse=True)
     return unique[:60]
 
