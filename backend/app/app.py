@@ -940,30 +940,158 @@ def market_price(symbol):
         return None
 
 
-def market_news(topic=None):
-    base_query = "beleggen OR ETF OR aandelen OR crypto OR economie"
-    if topic:
-        clean_topic = " ".join(topic.split())[:120]
-        base_query = f"{base_query} {clean_topic}"
-    query = urllib.parse.quote(base_query)
+def _parse_news_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+    except Exception:
+        pass
+    try:
+        from email.utils import parsedate_to_datetime
+        parsed = parsedate_to_datetime(value)
+        return parsed.replace(tzinfo=None) if parsed else None
+    except Exception:
+        return None
+
+
+def _news_relevance(title, description=""):
+    text = f"{title} {description}".lower()
+    high_value = [
+        "earnings", "resultaten", "kwartaal", "omzet", "winst", "verlies",
+        "guidance", "outlook", "dividend", "overname", "fusie", "acquisitie",
+        "ipo", "beursgang", "faillissement", "restructuring", "reorganisatie",
+        "ceo", "cfo", "fed", "ecb", "interest", "rente", "inflatie", "cpi",
+        "jobs report", "werkgelegenheid", "recessie", "tarief", "tarieven",
+        "sanctie", "regulation", "regelgeving", "goedkeuring", "approval",
+        "product launch", "productlancering", "forecast", "verwachting",
+        "price target", "koersdoel", "upgrade", "downgrade", "guidance"
+    ]
+    low_value = [
+        "beste aandelen", "top 10", "dit aandeel kan", "should you buy",
+        "koop nu", "sell now", "stock picks", "horoscope", "quiz"
+    ]
+    score = sum(3 for word in high_value if word in text)
+    score -= sum(4 for word in low_value if word in text)
+    return score
+
+
+def _google_news_items(query, selected_date=None):
+    date_filter = ""
+    if selected_date:
+        next_day = selected_date + __import__("datetime").timedelta(days=1)
+        date_filter = f" after:{selected_date.isoformat()} before:{next_day.isoformat()}"
+    encoded = urllib.parse.quote((query + date_filter)[:450])
     data = fetch_url(
-        f"https://news.google.com/rss/search?q={query}&hl=nl-BE&gl=BE&ceid=BE:nl"
+        f"https://news.google.com/rss/search?q={encoded}&hl=nl-BE&gl=BE&ceid=BE:nl",
+        timeout=12
     )
     if not data:
         return []
     try:
         root = ET.fromstring(data)
         items = []
-        for item in root.findall("./channel/item")[:12]:
+        for item in root.findall("./channel/item"):
+            published_raw = item.findtext("pubDate") or ""
+            published_dt = _parse_news_date(published_raw)
+            if selected_date and (not published_dt or published_dt.date() != selected_date):
+                continue
+            source_node = item.find("source")
+            source = (source_node.text or "").strip() if source_node is not None else ""
+            title = (item.findtext("title") or "").strip()
+            link = safe_external_url(item.findtext("link") or "")
             items.append({
-                "title": item.findtext("title") or "",
-                "link": safe_external_url(item.findtext("link") or ""),
-                "published": item.findtext("pubDate") or "",
-                "source": item.findtext("source") or ""
+                "title": title,
+                "link": link,
+                "published": published_dt.strftime("%d-%m-%Y %H:%M") if published_dt else published_raw,
+                "published_iso": published_dt.isoformat() if published_dt else "",
+                "source": source or "Google News",
+                "relevance": _news_relevance(title)
             })
         return items
     except Exception:
         return []
+
+
+def _yahoo_news_items(query):
+    encoded = urllib.parse.quote(" ".join((query or "").split())[:120])
+    data = fetch_url(
+        f"https://query1.finance.yahoo.com/v1/finance/search?q={encoded}&quotesCount=0&newsCount=25",
+        timeout=10
+    )
+    if not data:
+        return []
+    try:
+        payload = json.loads(data)
+        items = []
+        for item in payload.get("news", []):
+            title = (item.get("title") or "").strip()
+            link = safe_external_url(item.get("link") or "")
+            timestamp = item.get("providerPublishTime")
+            published_dt = datetime.fromtimestamp(float(timestamp)) if timestamp else None
+            if not title or not link:
+                continue
+            items.append({
+                "title": title,
+                "link": link,
+                "published": published_dt.strftime("%d-%m-%Y %H:%M") if published_dt else "",
+                "published_iso": published_dt.isoformat() if published_dt else "",
+                "source": (item.get("publisher") or "Yahoo Finance").strip(),
+                "relevance": _news_relevance(title, item.get("summary") or "")
+            })
+        return items
+    except Exception:
+        return []
+
+
+def market_news(topic=None, selected_date=None):
+    # Google News is the broad historical discovery layer; Yahoo Finance
+    # adds finance-specific articles and market coverage. Google Finance
+    # itself does not expose a public news API for third-party apps, so we
+    # provide direct Google Finance links in the UI rather than scraping it.
+    clean_topic = " ".join((topic or "").split())[:100]
+    queries = [
+        "aandelen OR aandelenmarkt OR beurs OR economie OR ETF OR crypto OR rente",
+        "stock market OR earnings OR economy OR ETF OR crypto OR interest rates"
+    ]
+    if clean_topic:
+        queries = [f"({q}) {clean_topic}" for q in queries]
+
+    items = []
+    for q in queries:
+        items.extend(_google_news_items(q, selected_date))
+
+    # Yahoo Finance is especially useful for finance-specific headlines.
+    items.extend(_yahoo_news_items(clean_topic or "stock market finance"))
+
+    # A single date is strict: Yahoo's current feed is filtered to that date
+    # when it contains matching timestamps; Google News is the historical
+    # source used to ensure date selection actually works.
+    if selected_date:
+        items = [
+            item for item in items
+            if item.get("published_iso") and item["published_iso"][:10] == selected_date.isoformat()
+        ]
+
+    seen = set()
+    unique = []
+    for item in sorted(
+        items,
+        key=lambda x: (x.get("relevance", 0), x.get("published_iso", "")),
+        reverse=True
+    ):
+        key = " ".join(item["title"].lower().split())
+        if key in seen:
+            continue
+        seen.add(key)
+        if item.get("relevance", 0) < -1:
+            continue
+        unique.append(item)
+
+    # Final presentation is chronological: newest first. The relevance
+    # score is only used to remove obvious low-value clickbait/noise.
+    unique.sort(key=lambda x: x.get("published_iso", ""), reverse=True)
+    return unique[:60]
 
 
 def market_snapshot(symbols=None):
@@ -1091,7 +1219,18 @@ def delete_investment(investment_id):
 @app.route("/market")
 @login_required
 def market():
-    return render_template("market.html", news=market_news())
+    selected_date_raw = (request.args.get("date") or date.today().isoformat()).strip()
+    selected_date = parse_date_or_none(selected_date_raw)
+    if not selected_date:
+        selected_date = date.today()
+    topic = " ".join((request.args.get("q") or "").split())[:100]
+    news = market_news(topic=topic, selected_date=selected_date)
+    return render_template(
+        "market.html",
+        news=news,
+        selected_date=selected_date.isoformat(),
+        topic=topic
+    )
 
 
 @app.route("/ai-investor", methods=["GET", "POST"])
