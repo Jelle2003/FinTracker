@@ -184,15 +184,25 @@ def exchange_rate(from_currency, to_currency):
     to_currency = (to_currency or "EUR").upper()
     if from_currency == to_currency:
         return 1.0
+    cache = getattr(g, "_fx_cache", {})
+    cache_key = f"{from_currency}:{to_currency}"
+    if cache_key in cache:
+        return cache[cache_key]
     if from_currency == "EUR":
         quote = market_price(f"EUR{to_currency}=X")
-        return quote["price"] if quote else None
+        rate = quote["price"] if quote else None
+        cache[cache_key] = rate
+        g._fx_cache = cache
+        return rate
     if to_currency == "EUR":
         rate = exchange_rate("EUR", from_currency)
         return (1 / rate) if rate else None
     to_eur = exchange_rate(from_currency, "EUR")
     eur_to_target = exchange_rate("EUR", to_currency)
-    return to_eur * eur_to_target if to_eur and eur_to_target else None
+    rate = to_eur * eur_to_target if to_eur and eur_to_target else None
+    cache[cache_key] = rate
+    g._fx_cache = cache
+    return rate
 
 
 def convert_amount(amount, from_currency, to_currency):
@@ -216,6 +226,21 @@ def currency_info():
         "currency_code": code,
         "currency_symbol": {"EUR": "€", "USD": "$", "GBP": "£"}.get(code, "€"),
     }
+
+
+def money(value, from_currency="EUR"):
+    """Format an amount in the currency selected by the user."""
+    converted = convert_amount(float(value or 0), from_currency, current_user.currency)
+    if converted is None:
+        converted = float(value or 0)
+    symbol = currency_info()["currency_symbol"]
+    return f"{symbol}{converted:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def money_value(value, from_currency="EUR"):
+    """Return a converted number for form fields and charts."""
+    converted = convert_amount(float(value or 0), from_currency, current_user.currency)
+    return round(converted if converted is not None else float(value or 0), 2)
 
 
 @app.context_processor
