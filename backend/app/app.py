@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from sqlalchemy import func, inspect, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -125,45 +125,70 @@ def load_user(user_id):
 
 
 # Maak de tabellen aan en voer kleine migraties uit voor oudere databases.
-# Bestaande gegevens blijven gekoppeld aan de eerste gebruiker.
+# Gunicorn start meerdere workers tegelijk. Daarom mag een migratie die door
+# een andere worker al is uitgevoerd geen crash veroorzaken.
+def add_column_if_missing(connection, table, column, definition):
+    columns = {row[1] for row in connection.exec_driver_sql(f"PRAGMA table_info({table})")}
+    if column in columns:
+        return
+
+    try:
+        connection.exec_driver_sql(
+            f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+        )
+    except OperationalError as error:
+        if "duplicate column name" not in str(error).lower():
+            raise
+
+
 with app.app_context():
     db.create_all()
 
     with db.engine.begin() as connection:
         for table in ("expense", "income", "investment"):
-            columns = {row[1] for row in connection.exec_driver_sql(f"PRAGMA table_info({table})")}
-            if "user_id" not in columns:
-                connection.exec_driver_sql(
-                    f"ALTER TABLE {table} ADD COLUMN user_id INTEGER REFERENCES user(id)"
-                )
-
-        user_columns = {
-            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(user)")
-        }
-        if "is_admin" not in user_columns:
-            connection.exec_driver_sql(
-                "ALTER TABLE user ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0"
+            add_column_if_missing(
+                connection,
+                table,
+                "user_id",
+                "INTEGER REFERENCES user(id)"
             )
 
-        user_profile_columns = {
-            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(user)")
-        }
-        if "display_name" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN display_name VARCHAR(80)")
-        if "email" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN email VARCHAR(254)")
-        if "currency" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'")
-        if "avatar_color" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN avatar_color VARCHAR(20) NOT NULL DEFAULT 'blue'")
-        if "risk_profile" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN risk_profile VARCHAR(20) NOT NULL DEFAULT 'balanced'")
-        if "investment_horizon" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN investment_horizon VARCHAR(20) NOT NULL DEFAULT 'medium'")
-        if "monthly_investment_budget" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN monthly_investment_budget FLOAT NOT NULL DEFAULT 0")
-        if "emergency_fund_target" not in user_profile_columns:
-            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN emergency_fund_target FLOAT NOT NULL DEFAULT 0")
+        add_column_if_missing(
+            connection, "user", "is_admin",
+            "BOOLEAN NOT NULL DEFAULT 0"
+        )
+        add_column_if_missing(
+            connection, "user", "display_name",
+            "VARCHAR(80)"
+        )
+        add_column_if_missing(
+            connection, "user", "email",
+            "VARCHAR(254)"
+        )
+        add_column_if_missing(
+            connection, "user", "currency",
+            "VARCHAR(3) NOT NULL DEFAULT 'EUR'"
+        )
+        add_column_if_missing(
+            connection, "user", "avatar_color",
+            "VARCHAR(20) NOT NULL DEFAULT 'blue'"
+        )
+        add_column_if_missing(
+            connection, "user", "risk_profile",
+            "VARCHAR(20) NOT NULL DEFAULT 'balanced'"
+        )
+        add_column_if_missing(
+            connection, "user", "investment_horizon",
+            "VARCHAR(20) NOT NULL DEFAULT 'medium'"
+        )
+        add_column_if_missing(
+            connection, "user", "monthly_investment_budget",
+            "FLOAT NOT NULL DEFAULT 0"
+        )
+        add_column_if_missing(
+            connection, "user", "emergency_fund_target",
+            "FLOAT NOT NULL DEFAULT 0"
+        )
 
         first_user = connection.exec_driver_sql(
             "SELECT id FROM user ORDER BY id LIMIT 1"
@@ -184,7 +209,6 @@ with app.app_context():
                     "UPDATE user SET is_admin = 1 WHERE id = ?",
                     (first_user[0],)
                 )
-
 
 def exchange_rate(from_currency, to_currency):
     """Get the current exchange rate. Financial data stays stored in EUR."""
@@ -218,13 +242,13 @@ def convert_amount(amount, from_currency, to_currency):
     return amount * rate if rate is not None else None
 
 
-# Add the investment currency to older databases.
+# Investment.currency is also migrated safely for older databases.
 with app.app_context():
-    inspector = inspect(db.engine)
-    columns = {column["name"] for column in inspector.get_columns("investment")}
-    if "currency" not in columns:
-        with db.engine.begin() as connection:
-            connection.execute(text("ALTER TABLE investment ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'"))
+    with db.engine.begin() as connection:
+        add_column_if_missing(
+            connection, "investment", "currency",
+            "VARCHAR(3) NOT NULL DEFAULT 'EUR'"
+        )
 
 
 def currency_info():
