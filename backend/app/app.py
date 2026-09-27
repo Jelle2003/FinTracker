@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, url_for, flash, redirect, Response, session, g
 from datetime import date, datetime, timedelta
 import os
+import csv
+import io
 import json
 import secrets
 import urllib.parse
@@ -16,7 +18,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from google import genai
 
 from .database import db
-from .models import User, Expense, Income, Investment, SavingsGoal
+from .models import User, Expense, Income, Investment, InvestmentEvent, SavingsGoal
 
 
 app = Flask(
@@ -248,6 +250,14 @@ with app.app_context():
         add_column_if_missing(
             connection, "investment", "currency",
             "VARCHAR(3) NOT NULL DEFAULT 'EUR'"
+        )
+        add_column_if_missing(
+            connection, "investment", "sector",
+            "VARCHAR(60)"
+        )
+        add_column_if_missing(
+            connection, "investment", "region",
+            "VARCHAR(40)"
         )
 
 
@@ -787,6 +797,7 @@ def index():
             "Voeg je risicoprofiel, noodbuffer en beleggingsbudget toe bij Account om FINTRACK persoonlijker te laten analyseren."
         )
 
+    financial_alerts=build_financial_alerts()
     return render_template(
         "index.html", selected_year=selected_year, years=years,
         income_total=income_total, expense_total=expense_total,
@@ -804,7 +815,8 @@ def index():
         investment_return=investment_return,
         investment_count=len(investments),
         investment_priced_count=priced_investments,
-        dashboard_goals=dashboard_goals
+        dashboard_goals=dashboard_goals,
+        financial_alerts=financial_alerts
     )
 
 
@@ -1636,6 +1648,10 @@ def investing():
     total_cost = 0.0
     total_value = 0.0
     all_prices = True
+    asset_alloc = {}
+    sector_alloc = {}
+    region_alloc = {}
+
     for h in holdings:
         cost = h.quantity * h.average_price
         quote = market_price(h.symbol)
@@ -1649,62 +1665,87 @@ def investing():
         else:
             all_prices = False
         gain_pct = ((value_display - cost_display) / cost_display * 100) if value_display is not None and cost_display else None
-        rows.append({
-            "holding": h,
-            "cost": cost_display,
-            "value": value_display,
-            "current_price": current_price,
-            "currency": quote["currency"] if quote else "",
-            "gain_pct": gain_pct,
-        })
+        review = None
+        if gain_pct is not None and gain_pct <= -15:
+            review = "Sterke daling: herbekijk de positie en de oorspronkelijke reden om te beleggen."
+        elif gain_pct is not None and gain_pct >= 30:
+            review = "Sterke stijging: controleer spreiding en risico."
+        rows.append({"holding": h, "cost": cost_display, "value": value_display,
+                     "current_price": current_price, "currency": quote["currency"] if quote else "",
+                     "gain_pct": gain_pct, "review": review})
+        allocation_value = value_display if value_display is not None else cost_display
+        asset_key = h.asset_type or "Andere"
+        sector_key = h.sector or "Niet ingevuld"
+        region_key = h.region or "Niet ingevuld"
+        asset_alloc[asset_key] = asset_alloc.get(asset_key, 0) + allocation_value
+        sector_alloc[sector_key] = sector_alloc.get(sector_key, 0) + allocation_value
+        region_alloc[region_key] = region_alloc.get(region_key, 0) + allocation_value
+
     gain = total_value - total_cost if holdings and all_prices else None
+    allocation_base = total_value if holdings and all_prices and total_value else total_cost
+    def allocation_rows(data):
+        return [{"name": k, "value": round(v,2),
+                 "share": round(v/allocation_base*100,1) if allocation_base else 0}
+                for k,v in sorted(data.items(), key=lambda x:x[1], reverse=True)]
 
-    # Simple rules surface positions worth reviewing; they are not automatic buy/sell orders.
-    for row in rows:
-        row["review"] = None
-        if row["gain_pct"] is not None and row["gain_pct"] <= -15:
-            row["review"] = "Sterke daling: herbekijk de positie en de oorspronkelijke reden om te beleggen."
-        elif row["gain_pct"] is not None and row["gain_pct"] >= 30:
-            row["review"] = "Sterke stijging: controleer of de positie nog past binnen je gewenste spreiding en risico."
+    events = InvestmentEvent.query.filter_by(user_id=current_user.id).order_by(
+        InvestmentEvent.date.desc(), InvestmentEvent.id.desc()).limit(30).all()
+    dividend_total = 0.0
+    for event in InvestmentEvent.query.filter_by(user_id=current_user.id, event_type="dividend").all():
+        converted = convert_amount(event.amount, event.currency, "EUR")
+        dividend_total += money_value(converted or event.amount, "EUR")
 
-    return render_template("investing.html", rows=rows, total_cost=total_cost,
-                           total_value=total_value, gain=gain)
+    return render_template("investing.html", rows=rows, total_cost=round(total_cost,2),
+                           total_value=round(total_value,2),
+                           gain=round(gain,2) if gain is not None else None,
+                           asset_alloc=allocation_rows(asset_alloc),
+                           sector_alloc=allocation_rows(sector_alloc),
+                           region_alloc=allocation_rows(region_alloc),
+                           events=events, dividend_total=round(dividend_total,2))
 
 
-@app.route("/investing/add", methods=["POST"])
+@app.route("/investing/events/add", methods=["POST"])
 @login_required
-def add_investment():
-    symbol = (request.form.get("symbol") or "").strip().upper()
-    name = (request.form.get("name") or symbol).strip()
-    asset_type = (request.form.get("asset_type") or "ETF").strip()
-    currency = (request.form.get("currency") or "").strip().upper()
+def add_investment_event():
+    symbol=(request.form.get("symbol") or "").strip().upper()
+    event_type=(request.form.get("event_type") or "buy").strip().lower()
+    event_date=parse_date_or_none(request.form.get("date") or "") or date.today()
+    currency=(request.form.get("currency") or current_user.currency).upper()
+    note=(request.form.get("note") or "").strip()[:160]
     try:
-        quantity = float(request.form.get("quantity") or 0)
-        average_price = float(request.form.get("average_price") or 0)
-        if not symbol or quantity <= 0 or average_price < 0 or len(currency) != 3:
-            raise ValueError
-        quote = market_price(symbol)
-        if not quote or quote["currency"] != currency:
-            raise ValueError
-            raise ValueError
+        quantity=float((request.form.get("quantity") or "0").replace(",", "."))
+        price=float((request.form.get("price") or "0").replace(",", "."))
+        amount=float((request.form.get("amount") or "0").replace(",", "."))
     except ValueError:
-        flash("Vul een geldig symbool, aantal en aankoopprijs in.", "error")
+        flash("Vul geldige cijfers in voor de beleggingsactiviteit.","error")
         return redirect(url_for("investing"))
-    db.session.add(Investment(symbol=symbol, name=name, asset_type=asset_type,
-                              quantity=quantity, average_price=average_price,
-                              currency=currency, user_id=current_user.id))
+    if not symbol or event_type not in {"buy","sell","dividend"} or len(currency)!=3:
+        flash("Ongeldige beleggingsactiviteit.","error")
+        return redirect(url_for("investing"))
+    if quantity<0 or price<0 or amount<0:
+        flash("Bedragen en aantallen mogen niet negatief zijn.","error")
+        return redirect(url_for("investing"))
+    if event_type=="dividend" and amount<=0:
+        flash("Een dividend moet groter zijn dan 0.","error")
+        return redirect(url_for("investing"))
+    if event_type!="dividend" and quantity<=0:
+        flash("Aantal moet groter zijn dan 0.","error")
+        return redirect(url_for("investing"))
+    db.session.add(InvestmentEvent(user_id=current_user.id,symbol=symbol,event_type=event_type,
+                                   quantity=quantity,price=price,amount=amount,currency=currency,
+                                   date=event_date,note=note or None))
     db.session.commit()
-    flash("Belegging toegevoegd.", "success")
+    flash("Beleggingsactiviteit opgeslagen.","success")
     return redirect(url_for("investing"))
 
 
-@app.route("/investing/delete/<int:investment_id>", methods=["POST"])
+@app.route("/investing/events/<int:event_id>/delete", methods=["POST"])
 @login_required
-def delete_investment(investment_id):
-    item = owned_or_404(Investment, investment_id)
-    db.session.delete(item)
+def delete_investment_event(event_id):
+    event=InvestmentEvent.query.filter_by(id=event_id,user_id=current_user.id).first_or_404()
+    db.session.delete(event)
     db.session.commit()
-    flash("Belegging verwijderd.", "success")
+    flash("Beleggingsactiviteit verwijderd.","success")
     return redirect(url_for("investing"))
 
 
@@ -1725,6 +1766,91 @@ def market():
         selected_date=selected_date.isoformat(),
         topic=topic
     )
+
+
+@app.route("/transactions")
+@login_required
+def transactions():
+    kind=(request.args.get("type") or "all").strip().lower()
+    category=(request.args.get("category") or "").strip()
+    query_text=(request.args.get("q") or "").strip().lower()
+    start=parse_date_or_none(request.args.get("start") or "")
+    end=parse_date_or_none(request.args.get("end") or "")
+    items=[]
+    if kind in {"all","income"}:
+        for item in owned_query(Income).all():
+            if (start and item.start_date<start) or (end and item.start_date>end): continue
+            if category and item.category!=category: continue
+            if query_text and query_text not in item.description.lower(): continue
+            items.append({"date":item.start_date,"kind":"income","category":item.category,"description":item.description,"amount":money_value(item.amount),"id":item.id})
+    if kind in {"all","expense"}:
+        for item in owned_query(Expense).all():
+            if (start and item.date<start) or (end and item.date>end): continue
+            if category and item.category!=category: continue
+            if query_text and query_text not in item.description.lower(): continue
+            items.append({"date":item.date,"kind":"expense","category":item.category,"description":item.description,"amount":money_value(item.amount),"id":item.id})
+    items.sort(key=lambda x:(x["date"],x["id"]),reverse=True)
+    recurring={}
+    for item in items:
+        key=(item["kind"],item["description"].strip().lower(),item["category"],round(item["amount"],2))
+        recurring[key]=recurring.get(key,0)+1
+    recurring_items=[{"description":k[1],"category":k[2],"kind":k[0],"amount":k[3],"count":v} for k,v in recurring.items() if v>=2]
+    categories=sorted({i["category"] for i in items})
+    return render_template("transactions.html",items=items,categories=categories,selected_type=kind,
+                           selected_category=category,q=query_text,start=request.args.get("start",""),
+                           end=request.args.get("end",""),recurring_items=sorted(recurring_items,key=lambda x:x["count"],reverse=True)[:8])
+
+
+@app.route("/transactions/export")
+@login_required
+def transactions_export():
+    output=io.StringIO()
+    writer=csv.writer(output)
+    writer.writerow(["Datum","Type","Categorie","Omschrijving","Bedrag","Valuta"])
+    for item in owned_query(Income).order_by(Income.start_date.desc()).all():
+        writer.writerow([item.start_date.isoformat(),"Inkomst",item.category,item.description,money_value(item.amount),current_user.currency])
+    for item in owned_query(Expense).order_by(Expense.date.desc()).all():
+        writer.writerow([item.date.isoformat(),"Uitgave",item.category,item.description,money_value(item.amount),current_user.currency])
+    return Response("\ufeff"+output.getvalue(),mimetype="text/csv; charset=utf-8",
+                    headers={"Content-Disposition":"attachment; filename=fintrack-transacties.csv"})
+
+
+def build_financial_alerts():
+    alerts=[]
+    today=date.today()
+    month_start=today.replace(day=1)
+    next_month=(month_start.replace(day=28)+timedelta(days=4)).replace(day=1)
+    month_income=sum(i.amount for i in owned_query(Income).all() if month_start<=i.start_date<next_month)
+    month_expenses=sum(e.amount for e in owned_query(Expense).all() if month_start<=e.date<next_month)
+    if month_income and month_expenses>month_income: alerts.append(("danger","Je uitgaven liggen deze maand boven je geregistreerde inkomsten."))
+    elif month_income and month_expenses>month_income*.8: alerts.append(("warning","Je hebt deze maand al meer dan 80% van je geregistreerde inkomsten uitgegeven."))
+    for goal in owned_query(SavingsGoal).all():
+        if goal.deadline and goal.current_amount<goal.target_amount:
+            days=(goal.deadline-today).days
+            remaining=goal.target_amount-goal.current_amount
+            if 0<=days<=90: alerts.append(("warning",f"'{goal.name}' heeft nog {days} dagen en {money(remaining)} nodig."))
+            if days<0: alerts.append(("danger",f"'{goal.name}' heeft de deadline overschreden en is nog niet volledig bereikt."))
+    values=[]
+    for h in owned_query(Investment).all():
+        quote=market_price(h.symbol)
+        if quote: values.append((h.symbol,money_value(h.quantity*quote["price"],quote["currency"])))
+    total=sum(v for _,v in values)
+    if total:
+        for symbol,value in sorted(values,key=lambda x:x[1],reverse=True):
+            share=value/total*100
+            if share>=35: alerts.append(("warning",f"{symbol} vertegenwoordigt ongeveer {share:.0f}% van je portefeuille."))
+    if current_user.emergency_fund_target>0:
+        income_total=sum(i.amount for i in owned_query(Income).all())
+        expense_total=sum(e.amount for e in owned_query(Expense).all())
+        if income_total-expense_total<current_user.emergency_fund_target:
+            alerts.append(("info","Je geregistreerde cashflow ligt nog onder je ingestelde noodfondsdoel."))
+    return alerts[:10]
+
+
+@app.route("/notifications")
+@login_required
+def notifications():
+    return render_template("notifications.html",alerts=build_financial_alerts())
 
 
 @app.route("/ai-investor", methods=["GET", "POST"])
