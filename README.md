@@ -9,7 +9,7 @@ FINTRACK is een moderne persoonlijke financiële webapp waarmee je inkomsten, ui
 - **Dashboard:** inkomsten, uitgaven, netto saldo, spaarpercentage, vermogen en financiële inzichten.
 - **Inkomsten & uitgaven:** toevoegen, bekijken, bewerken en verwijderen.
 - **Spaardoelen:** doelen aanmaken, bedragen toevoegen, voortgang opvolgen, deadlines bekijken en benodigde maandelijkse inleg berekenen.
-- **Beleggen:** portefeuille met actuele marktkoersen waar beschikbaar, gemiddelde aankoopprijs, rendement en review-signalen.
+- **Beleggen:** portefeuille met actuele marktkoersen waar beschikbaar, gemiddelde aankoopprijs, rendement en review-signalen. Het toevoegen van posities gebruikt zoekhulp/autocomplete; het beleggingslogboek heeft dezelfde tickerhulp en een responsive formulier dat binnen de kaart blijft.
 - **Markt & Nieuws:** marktindexen, crypto, valuta, grondstoffen en relevante financiële nieuwsartikelen.
 - **AI Adviseur:** Gemini-gebaseerde analyse van financiële situatie, portefeuille, spaardoelen en beleggingsprofiel.
 - **FINTRACK 2.0:** koppeling tussen cashflow, spaardoelen, beleggingsportefeuille, risicoprofiel en beleggingshorizon.
