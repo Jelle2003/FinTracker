@@ -6,7 +6,6 @@
 <title>Income · FINTRACK</title>
 <script nonce="{{ g.csp_nonce }}" src="https://cdn.tailwindcss.com"></script>
 <script nonce="{{ g.csp_nonce }}">tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
-<script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
@@ -29,7 +28,7 @@
 <section class="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900 p-4">
 <h2 class="text-lg font-semibold mb-3">Income overview</h2>
 <div class="mb-4"><span class="text-sm text-slate-300 mr-2">Total income:</span><span class="inline-block rounded-xl border border-slate-700 bg-slate-800 px-3 py-1 font-semibold">€{{'%.2f'|format(total or 0)}}</span></div>
-<canvas id="incomeChart" height="130"></canvas>
+<div id="incomeChart" class="native-income-chart"></div>
 </section>
 
 <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
@@ -74,9 +73,25 @@
 </section>
 
 <script nonce="{{ g.csp_nonce }}">
-const monthLabels={{(month_labels or [])|tojson}};
-const monthValues={{(month_values or [])|tojson}};
-const drawIncomeChart=()=>{const light=document.documentElement.dataset.theme==="light",text=light?"#475569":"#cbd5e1",grid=light?"#e2e8f0":"#334155",el=document.getElementById("incomeChart");if(window.incomeChart)window.incomeChart.destroy();window.incomeChart=new Chart(el.getContext("2d"),{type:"bar",data:{labels:monthLabels,datasets:[{label:"Inkomsten",data:monthValues,backgroundColor:light?"rgba(2,132,199,.72)":"rgba(56,189,248,.72)",borderColor:light?"#0284c7":"#38bdf8",borderWidth:1.5,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"top",align:"start",labels:{color:text,usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:{padding:11,cornerRadius:10}},scales:{x:{border:{display:false},ticks:{color:text},grid:{display:false}},y:{beginAtZero:true,border:{display:false},ticks:{color:text},grid:{color:grid}}}}})};drawIncomeChart();window.addEventListener("fintrack-theme-change",drawIncomeChart);
+const monthLabels={{(month_labels or [])|tojson}},monthValues={{(month_values or [])|tojson}};
+function drawIncomeChart(){
+  const host=document.getElementById("incomeChart");if(!host)return;host.innerHTML="";
+  const light=document.documentElement.dataset.theme==="light";
+  const text=light?"#475569":"#cbd5e1",grid=light?"#e2e8f0":"#263449",barColor=light?"#0284c7":"#38bdf8";
+  if(!monthValues.length){host.innerHTML='<div class="dashboard-empty-chart"><span>○</span><p>Nog geen inkomsten.</p></div>';return;}
+  const w=860,h=300,p={l:48,r:18,t:24,b:44},iw=w-p.l-p.r,ih=h-p.t-p.b,max=Math.max(...monthValues,1)*1.12,x=i=>p.l+(i/(monthValues.length-1||1))*iw;
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.classList.add("native-income-svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("role","img");svg.setAttribute("aria-label","Inkomsten per maand");
+  for(let i=0;i<=4;i++){const yy=p.t+ih*i/4,line=document.createElementNS("http://www.w3.org/2000/svg","line");line.setAttribute("x1",p.l);line.setAttribute("x2",w-p.r);line.setAttribute("y1",yy);line.setAttribute("y2",yy);line.setAttribute("stroke",grid);line.setAttribute("stroke-dasharray","4 6");svg.appendChild(line);}
+  const step=iw/monthValues.length,barWidth=Math.min(52,step*.62);
+  monthValues.forEach((v,i)=>{const bh=(v/max)*ih,xx=p.l+i*step+(step-barWidth)/2,yy=p.t+ih-bh;
+    const bar=document.createElementNS("http://www.w3.org/2000/svg","rect");bar.setAttribute("x",xx);bar.setAttribute("y",yy);bar.setAttribute("width",barWidth);bar.setAttribute("height",Math.max(bh,2));bar.setAttribute("rx","8");bar.setAttribute("fill",barColor);bar.setAttribute("fill-opacity",".82");svg.appendChild(bar);
+    const label=document.createElementNS("http://www.w3.org/2000/svg","text");label.textContent=monthLabels[i];label.setAttribute("x",xx+barWidth/2);label.setAttribute("y",h-14);label.setAttribute("text-anchor","middle");label.setAttribute("fill",text);label.setAttribute("font-size","11");svg.appendChild(label);
+    if(v>0){const amount=document.createElementNS("http://www.w3.org/2000/svg","text");amount.textContent="€"+Math.round(v);amount.setAttribute("x",xx+barWidth/2);amount.setAttribute("y",Math.max(yy-7,12));amount.setAttribute("text-anchor","middle");amount.setAttribute("fill",text);amount.setAttribute("font-size","10");amount.setAttribute("font-weight","700");svg.appendChild(amount);}
+  });
+  host.appendChild(svg);
+}
+drawIncomeChart();window.addEventListener("fintrack-theme-change",drawIncomeChart);
+</script>
 </script>
 </main>
 <script nonce="{{ g.csp_nonce }}">
