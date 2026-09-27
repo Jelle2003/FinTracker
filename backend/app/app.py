@@ -156,6 +156,14 @@ with app.app_context():
             connection.exec_driver_sql("ALTER TABLE user ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'")
         if "avatar_color" not in user_profile_columns:
             connection.exec_driver_sql("ALTER TABLE user ADD COLUMN avatar_color VARCHAR(20) NOT NULL DEFAULT 'blue'")
+        if "risk_profile" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN risk_profile VARCHAR(20) NOT NULL DEFAULT 'balanced'")
+        if "investment_horizon" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN investment_horizon VARCHAR(20) NOT NULL DEFAULT 'medium'")
+        if "monthly_investment_budget" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN monthly_investment_budget FLOAT NOT NULL DEFAULT 0")
+        if "emergency_fund_target" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN emergency_fund_target FLOAT NOT NULL DEFAULT 0")
 
         first_user = connection.exec_driver_sql(
             "SELECT id FROM user ORDER BY id LIMIT 1"
@@ -405,6 +413,15 @@ def account():
             email = (request.form.get("email") or "").strip().lower()
             currency = (request.form.get("currency") or "EUR").upper()
             avatar_color = (request.form.get("avatar_color") or "blue").lower()
+            risk_profile = (request.form.get("risk_profile") or "balanced").lower()
+            investment_horizon = (request.form.get("investment_horizon") or "medium").lower()
+
+            try:
+                monthly_investment_budget = float(request.form.get("monthly_investment_budget") or 0)
+                emergency_fund_target = float(request.form.get("emergency_fund_target") or 0)
+            except ValueError:
+                monthly_investment_budget = -1
+                emergency_fund_target = -1
 
             if len(display_name) > 80:
                 flash("Je weergavenaam mag maximaal 80 tekens bevatten.", "error")
@@ -422,10 +439,26 @@ def account():
                 flash("Ongeldige profielkleur.", "error")
                 return render_template("account.html", user=user)
 
+            if risk_profile not in {"defensive", "balanced", "dynamic"}:
+                flash("Ongeldig risicoprofiel.", "error")
+                return render_template("account.html", user=user)
+
+            if investment_horizon not in {"short", "medium", "long"}:
+                flash("Ongeldige beleggingshorizon.", "error")
+                return render_template("account.html", user=user)
+
+            if monthly_investment_budget < 0 or emergency_fund_target < 0:
+                flash("Bedragen voor je financieel profiel moeten 0 of hoger zijn.", "error")
+                return render_template("account.html", user=user)
+
             user.display_name = display_name or None
             user.email = email or None
             user.currency = currency
             user.avatar_color = avatar_color
+            user.risk_profile = risk_profile
+            user.investment_horizon = investment_horizon
+            user.monthly_investment_budget = monthly_investment_budget
+            user.emergency_fund_target = emergency_fund_target
             db.session.commit()
             flash("Je profiel is bijgewerkt.", "success")
             return redirect(url_for("account"))
