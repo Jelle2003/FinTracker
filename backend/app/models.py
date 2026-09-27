@@ -15,6 +15,8 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(80), nullable=True)
     email = db.Column(db.String(254), nullable=True)
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
+    sector = db.Column(db.String(60), nullable=True)
+    region = db.Column(db.String(40), nullable=True)
     avatar_color = db.Column(db.String(20), nullable=False, default="blue", server_default="blue")
     risk_profile = db.Column(db.String(20), nullable=False, default="balanced", server_default="balanced")
     investment_horizon = db.Column(db.String(20), nullable=False, default="medium", server_default="medium")
@@ -74,3 +76,17 @@ class SavingsGoal(db.Model):
     current_amount = db.Column(db.Float, nullable=False, default=0)
     deadline = db.Column(db.Date, nullable=True)
     color = db.Column(db.String(20), nullable=False, default="blue", server_default="blue")
+
+
+class InvestmentEvent(db.Model):
+    """Manual investment activity and dividend ledger."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    symbol = db.Column(db.String(20), nullable=False)
+    event_type = db.Column(db.String(20), nullable=False, default="buy")
+    quantity = db.Column(db.Float, nullable=False, default=0)
+    price = db.Column(db.Float, nullable=False, default=0)
+    amount = db.Column(db.Float, nullable=False, default=0)
+    currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
+    date = db.Column(db.Date, nullable=False, default=date.today)
+    note = db.Column(db.String(160), nullable=True)
