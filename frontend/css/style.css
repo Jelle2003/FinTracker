@@ -825,3 +825,13 @@ footer{
   .register-password-hint.is-valid{color:#047857}
   .register-password-hint.is-invalid{color:#be123c}
 }
+
+
+/* Security-aware logout form: keep it visually identical to the nav link. */
+.nav-logout-form { margin: 0; padding: 0; }
+.nav-logout-form .nav-logout {
+    font: inherit;
+    cursor: pointer;
+    background: none;
+    border: 0;
+}
