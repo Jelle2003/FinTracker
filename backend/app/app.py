@@ -1654,19 +1654,39 @@ def ai_investor():
                     })
 
             news = market_news(question)[:5]
+            goals = owned_query(SavingsGoal).order_by(SavingsGoal.deadline.asc()).limit(10).all()
+
+            financial_context = {
+                "currency": current_user.currency,
+                "risk_profile": current_user.risk_profile,
+                "investment_horizon": current_user.investment_horizon,
+                "monthly_investment_budget": current_user.monthly_investment_budget,
+                "emergency_fund_target": current_user.emergency_fund_target,
+                "savings_goals": [
+                    {
+                        "name": goal.name,
+                        "current_amount": goal.current_amount,
+                        "target_amount": goal.target_amount,
+                        "deadline": goal.deadline.isoformat() if goal.deadline else None,
+                    }
+                    for goal in goals
+                ],
+            }
 
             prompt = (
                 f"VANDAAG: {date.today().isoformat()}\n\n"
                 f"VRAAG VAN DE GEBRUIKER:\n{question}\n\n"
+                f"FINANCIEEL PROFIEL:\n{json.dumps(financial_context, ensure_ascii=False)}\n\n"
                 f"ACTUELE MARKTDATA:\n{json.dumps(market_data, ensure_ascii=False)}\n\n"
                 f"ACTUEEL NIEUWS:\n{json.dumps(news, ensure_ascii=False)}\n\n"
                 f"PORTFOLIO VAN DE GEBRUIKER:\n{json.dumps(portfolio, ensure_ascii=False)}\n\n"
                 "Beantwoord de vraag concreet in het Nederlands. "
-                "Gebruik de actuele data en nieuwsitems hierboven. "
-                "Als informatie ontbreekt, zeg dat expliciet. "
-                "Als de gebruiker om aandelen, ETF's of crypto vraagt, "
-                "vergelijk relevante opties in plaats van blind één keuze te geven. "
-                "Vermeld bij actuele cijfers altijd dat het moment van ophalen relevant is."
+                "Verbind beleggen waar relevant met de spaardoelen, beschikbare ruimte en horizon van de gebruiker. "
+                "Gebruik actuele data en nieuwsitems hierboven en benoem wanneer data ontbreekt of mogelijk vertraagd is. "
+                "Bij een vraag over kopen of verkopen: geef een onderbouwde analyse met scenario's, risico's en redenen om een positie te herbekijken; "
+                "presenteer geen koers of rendement als zekerheid. "
+                "Bij meerdere aandelen, ETF's of crypto: vergelijk relevante opties op spreiding, risico, waardering en aansluiting bij het profiel "
+                "in plaats van blind één keuze als winnaar te presenteren."
             )
 
             try:
@@ -1675,8 +1695,7 @@ def ai_investor():
                     flash("De lokale AI gaf geen antwoord terug.", "error")
             except urllib.error.URLError:
                 flash(
-                    "De lokale AI is niet bereikbaar of reageert niet op tijd. Controleer of Ollama draait "
-                    "en of het ingestelde model geïnstalleerd is.",
+                    "De AI-service is momenteel niet bereikbaar. Controleer de Gemini-configuratie en probeer opnieuw.",
                     "error"
                 )
             except Exception as exc:
