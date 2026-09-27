@@ -86,7 +86,7 @@
         <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
     </div>
 
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         (() => {
             const form = document.querySelector(".login-form");
             const password = document.getElementById("new_password");
