@@ -1166,3 +1166,15 @@ body.theme-dark .login-security{border-color:#1f3044;background:rgba(7,16,28,.5)
   .native-donut{height:210px}
   .native-donut-legend{grid-template-columns:1fr}
 }
+
+/* Consistent native finance charts */
+.native-category-chart{width:100%;min-height:300px}
+.native-bar-chart,.native-income-svg{display:block;width:100%;height:auto;min-height:260px}
+.native-income-chart{width:100%;min-height:300px}
+@media(max-width:600px){
+  .native-category-chart{min-height:260px}
+  .native-bar-chart{min-width:620px}
+  #catChart{overflow-x:auto}
+  .native-income-svg{min-width:620px}
+  #incomeChart{overflow-x:auto}
+}
