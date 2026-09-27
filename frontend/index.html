@@ -247,11 +247,12 @@ function drawCashflow(){
 
   host.style.display="none";
   host.parentElement.appendChild(svg);
-  const legend=host.parentElement.querySelector(".native-chart-legend");if(legend)legend.remove();
+  const chartSection=host.parentElement.parentElement;
+  const legend=chartSection.querySelector(".native-chart-legend");if(legend)legend.remove();
   const l=document.createElement("div");
   l.className="native-chart-legend";
   l.innerHTML='<span class="chart-legend-item"><i style="background:'+t.income+'"></i><b>Inkomsten</b><small>ontvangen</small></span><span class="chart-legend-item"><i style="background:'+t.expense+'"></i><b>Uitgaven</b><small>besteed</small></span>';
-  host.parentElement.appendChild(l);
+  chartSection.appendChild(l);
 
   let tip=host.parentElement.querySelector(".chart-hover-tooltip");
   if(!tip){
