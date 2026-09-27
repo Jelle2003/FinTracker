@@ -1,11 +1,22 @@
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 
-instance/*.db
+# Virtual environment
+venv/
+.venv/
 
+# Environment / secrets
 .env
+*.env
 
-create_user.py
-set_password.py
-*.backup
+# Local database and runtime files
+instance/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
