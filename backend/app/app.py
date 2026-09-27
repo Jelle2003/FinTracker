@@ -1357,6 +1357,19 @@ def investment_search_api():
     return {"results": investment_search(query)}
 
 
+@app.route("/api/investing/quote")
+@limiter.limit("30 per minute")
+@login_required
+def investment_quote_api():
+    symbol = (request.args.get("symbol") or "").strip().upper()
+    if not symbol:
+        return {"error": "missing_symbol"}, 400
+    quote = market_price(symbol)
+    if not quote:
+        return {"error": "quote_unavailable"}, 404
+    return {"symbol": symbol, "price": quote["price"], "currency": quote["currency"]}
+
+
 def market_price(symbol):
     encoded = urllib.parse.quote(symbol.strip().upper(), safe="")
     data = fetch_url(f"https://query1.finance.yahoo.com/v8/finance/chart/{encoded}?range=1d&interval=1d")
@@ -1631,17 +1644,22 @@ def add_investment():
     symbol = (request.form.get("symbol") or "").strip().upper()
     name = (request.form.get("name") or symbol).strip()
     asset_type = (request.form.get("asset_type") or "ETF").strip()
+    currency = (request.form.get("currency") or "").strip().upper()
     try:
         quantity = float(request.form.get("quantity") or 0)
         average_price = float(request.form.get("average_price") or 0)
-        if not symbol or quantity <= 0 or average_price < 0:
+        if not symbol or quantity <= 0 or average_price < 0 or len(currency) != 3:
+            raise ValueError
+        quote = market_price(symbol)
+        if not quote or quote["currency"] != currency:
+            raise ValueError
             raise ValueError
     except ValueError:
         flash("Vul een geldig symbool, aantal en aankoopprijs in.", "error")
         return redirect(url_for("investing"))
     db.session.add(Investment(symbol=symbol, name=name, asset_type=asset_type,
                               quantity=quantity, average_price=average_price,
-                              user_id=current_user.id))
+                              currency=currency, user_id=current_user.id))
     db.session.commit()
     flash("Belegging toegevoegd.", "success")
     return redirect(url_for("investing"))
