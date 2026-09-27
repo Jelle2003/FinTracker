@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#08111f">
+    <meta name="theme-color" content="#f4f7fb">
     <title>Account aanmaken · FINTRACK</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -45,7 +45,8 @@
                     <label for="username">Gebruikersnaam</label>
                     <div class="login-input-wrap">
                         <input type="text" id="username" name="username" required minlength="3" maxlength="80"
-                               autocomplete="username" autocapitalize="none" placeholder="Kies een gebruikersnaam">
+                               autocomplete="username" autocapitalize="none" placeholder="Kies een gebruikersnaam"
+                               value="{{ username|default('', true) }}">
                     </div>
                 </div>
                 <div class="login-field">
@@ -65,6 +66,7 @@
                 <button type="submit" class="login-submit">
                     <span>Account aanmaken</span><span aria-hidden="true">→</span>
                 </button>
+            <p id="password-match" class="register-password-hint" aria-live="polite"></p>
             </form>
             <p class="login-description" style="text-align:center;margin-top:20px">
                 Heb je al een account? <a href="{{ url_for('login') }}">Log hier in</a>
@@ -72,5 +74,37 @@
         </main>
         <p class="login-footer">FINTRACK · persoonlijk financieel overzicht</p>
     </div>
+    <script>
+        (() => {
+            const form = document.querySelector(".login-form");
+            const password = document.getElementById("password");
+            const confirm = document.getElementById("confirm_password");
+            const hint = document.getElementById("password-match");
+            if (!form || !password || !confirm || !hint) return;
+
+            const validate = () => {
+                if (!confirm.value) {
+                    hint.textContent = "";
+                    confirm.setCustomValidity("");
+                    return;
+                }
+                const matches = password.value === confirm.value;
+                hint.textContent = matches ? "✓ Wachtwoorden komen overeen." : "De wachtwoorden komen niet overeen.";
+                hint.classList.toggle("is-valid", matches);
+                hint.classList.toggle("is-invalid", !matches);
+                confirm.setCustomValidity(matches ? "" : "De wachtwoorden komen niet overeen.");
+            };
+
+            password.addEventListener("input", validate);
+            confirm.addEventListener("input", validate);
+            form.addEventListener("submit", (event) => {
+                validate();
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    form.reportValidity();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
