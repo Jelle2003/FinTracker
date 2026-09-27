@@ -16,7 +16,10 @@ FINTRACK is een moderne persoonlijke financiële webapp waarmee je inkomsten, ui
 - **Account:** profielgegevens, valuta, risicoprofiel, beleggingshorizon, maandbudget en noodfondsdoel.
 - **Admin:** gebruikersbeheer, rollen en basisstatistieken voor administrators.
 - **Multi-user:** financiële gegevens zijn per account geïsoleerd.
-- **Responsive UX:** desktop- en mobiele interface met moderne navigatie en hamburger-menu.
+- **Responsive UX:** desktop- en mobiele interface met moderne navigatie, hamburger-menu en mobile-first touch targets.
+- **Transacties:** gecombineerd overzicht van inkomsten en uitgaven met zoeken, filters, terugkerende patronen en CSV-export.
+- **Alerts:** automatische signalen voor cashflow, spaardoelen, portefeuilleconcentratie en noodfonds.
+- **Portfolio analytics:** asset-, sector- en regioverdeling plus een beleggingslogboek voor aankopen, verkopen en dividend.
 - **Gedeelde navigatie:** alle ingelogde pagina's gebruiken dezelfde centrale `frontend/_navbar.html`, zodat hoogte, volgorde en UX van de navbar overal identiek blijven.
 - **Thema:** licht/donker thema dat centraal wordt opgeslagen en over alle pagina's wordt toegepast.
 - **Valuta:** gebruikers kunnen EUR, USD of GBP kiezen; bedragen worden waar mogelijk omgerekend met actuele wisselkoersen.
@@ -261,3 +264,8 @@ Na wijzigingen is het aanbevolen om minimaal te controleren:
 Repository: `Jelle2003/FinTracker`
 
 De `main` branch bevat de actuele applicatieversie. De Raspberry Pi moet na wijzigingen expliciet worden bijgewerkt met `git pull origin main`; GitHub-wijzigingen zijn dus niet automatisch live op de Raspberry Pi.
+
+
+## FINTRACK 3.0 modules
+
+De huidige productrichting bevat naast het basisdashboard een centrale Transacties-module met filters, zoekfunctie, terugkerende patronen en CSV-export; een Alerts-module met automatische aandachtspunten; uitgebreidere Beleggen-analytics voor asset-, sector- en regioweging; en een handmatig beleggingslogboek voor aankopen, verkopen en ontvangen dividend. Deze signalen sluiten aan op de bestaande spaardoelen en Gemini AI-context. Alerts en portfolio-signalen zijn gebaseerd op geregistreerde gegevens en zijn geen gegarandeerde financiële voorspellingen of handelsopdrachten.
