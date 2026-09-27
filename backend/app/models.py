@@ -7,6 +7,7 @@ from .database import db
 
 
 class User(UserMixin, db.Model):
+    """User account and personal preferences."""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -19,6 +20,7 @@ class User(UserMixin, db.Model):
     incomes = db.relationship("Income", backref="user", lazy=True, cascade="all, delete-orphan")
     investments = db.relationship("Investment", backref="user", lazy=True, cascade="all, delete-orphan")
 
+    # Store only a password hash; the original password is never saved.
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -27,6 +29,7 @@ class User(UserMixin, db.Model):
 
 
 class Expense(db.Model):
+    """Single expense belonging to one user."""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     description = db.Column(db.String(120), nullable=False)
@@ -36,6 +39,7 @@ class Expense(db.Model):
 
 
 class Income(db.Model):
+    """Income record belonging to one user."""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     description = db.Column(db.String(120), nullable=False)
@@ -46,6 +50,7 @@ class Income(db.Model):
 
 
 class Investment(db.Model):
+    """Investment position belonging to one user."""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     symbol = db.Column(db.String(20), nullable=False)
