@@ -23,7 +23,7 @@
       <a href="{{url_for('investing')}}">Beleggen</a>
       <a href="{{url_for('market')}}">Markt & Nieuws</a>
       <a href="{{url_for('ai_investor')}}">AI Adviseur</a>
-      <form method="post" action="{{url_for('logout')}}" class="nav-logout-form">{{ csrf_token() }}<button type="submit" class="nav-logout">Afmelden</button></form>
+      <a href="{{url_for('account')}}">Account</a><form method="post" action="{{url_for('logout')}}" class="nav-logout-form">{{ csrf_token() }}<button type="submit" class="nav-logout">Afmelden</button></form>
     </nav>
   </div>
 </header>
