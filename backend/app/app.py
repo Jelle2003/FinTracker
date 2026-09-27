@@ -138,6 +138,14 @@ with app.app_context():
                     f"ALTER TABLE {table} ADD COLUMN user_id INTEGER REFERENCES user(id)"
                 )
 
+        user_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(user)")
+        }
+        if "is_admin" not in user_columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE user ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0"
+            )
+
         first_user = connection.exec_driver_sql(
             "SELECT id FROM user ORDER BY id LIMIT 1"
         ).fetchone()
@@ -146,6 +154,15 @@ with app.app_context():
             for table in ("expense", "income", "investment"):
                 connection.exec_driver_sql(
                     f"UPDATE {table} SET user_id = ? WHERE user_id IS NULL",
+                    (first_user[0],)
+                )
+
+            admin_exists = connection.exec_driver_sql(
+                "SELECT 1 FROM user WHERE is_admin = 1 LIMIT 1"
+            ).fetchone()
+            if not admin_exists:
+                connection.exec_driver_sql(
+                    "UPDATE user SET is_admin = 1 WHERE id = ?",
                     (first_user[0],)
                 )
 
@@ -327,6 +344,90 @@ def account():
         return redirect(url_for("account"))
 
     return render_template("account.html")
+
+
+def admin_required(view):
+    """Allow access only to authenticated FINTRACK administrators."""
+    from functools import wraps
+
+    @wraps(view)
+    @login_required
+    def wrapped(*args, **kwargs):
+        if not current_user.is_admin:
+            return Response("Forbidden", status=403)
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
+@app.route("/admin")
+@admin_required
+def admin():
+    users = User.query.order_by(User.username.asc()).all()
+    total_users = len(users)
+    total_expenses = Expense.query.count()
+    total_incomes = Income.query.count()
+    total_investments = Investment.query.count()
+    admin_count = User.query.filter_by(is_admin=True).count()
+
+    return render_template(
+        "admin.html",
+        users=users,
+        total_users=total_users,
+        total_expenses=total_expenses,
+        total_incomes=total_incomes,
+        total_investments=total_investments,
+        admin_count=admin_count,
+    )
+
+
+@app.route("/admin/users/<int:user_id>/toggle-admin", methods=["POST"])
+@admin_required
+def toggle_admin(user_id):
+    user = db.session.get(User, user_id)
+    if user is None:
+        flash("Gebruiker niet gevonden.", "error")
+        return redirect(url_for("admin"))
+
+    if user.id == current_user.id:
+        flash("Je kunt je eigen adminrechten niet wijzigen.", "error")
+        return redirect(url_for("admin"))
+
+    if user.is_admin and User.query.filter_by(is_admin=True).count() <= 1:
+        flash("Er moet altijd minstens één administrator overblijven.", "error")
+        return redirect(url_for("admin"))
+
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    flash(
+        f"Adminrechten voor {user.username} zijn " +
+        ("ingeschakeld." if user.is_admin else "uitgeschakeld."),
+        "success",
+    )
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id):
+    user = db.session.get(User, user_id)
+    if user is None:
+        flash("Gebruiker niet gevonden.", "error")
+        return redirect(url_for("admin"))
+
+    if user.id == current_user.id:
+        flash("Je kunt je eigen account niet verwijderen vanuit het adminpaneel.", "error")
+        return redirect(url_for("admin"))
+
+    if user.is_admin and User.query.filter_by(is_admin=True).count() <= 1:
+        flash("De laatste administrator kan niet worden verwijderd.", "error")
+        return redirect(url_for("admin"))
+
+    username = user.username
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"Gebruiker {username} is verwijderd.", "success")
+    return redirect(url_for("admin"))
 
 
 @app.route("/logout", methods=["POST"])
