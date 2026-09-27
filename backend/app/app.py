@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, url_for, flash, redirect, Response, session
+from flask import Flask, render_template, request, url_for, flash, redirect, Response, session, g
 from datetime import date, datetime, date as dt_date
 import os
 import json
+import secrets
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -72,6 +73,11 @@ limiter = Limiter(
 )
 
 
+@app.before_request
+def prepare_csp_nonce():
+    g.csp_nonce = secrets.token_urlsafe(32)
+
+
 @app.after_request
 def add_security_headers(response):
     """Add browser-side security controls to every response."""
@@ -90,7 +96,7 @@ def add_security_headers(response):
         "img-src 'self' data: https:; "
         "font-src 'self' https: data:; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+        f"script-src 'self' 'nonce-{g.csp_nonce}' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
         "connect-src 'self'; "
     )
     if request.is_secure:
