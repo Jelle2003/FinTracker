@@ -16,7 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from google import genai
 
 from .database import db
-from .models import User, Expense, Income, Investment
+from .models import User, Expense, Income, Investment, SavingsGoal
 
 
 app = Flask(
@@ -678,6 +678,12 @@ def index():
     years.update(y for (y,) in db.session.query(func.strftime("%Y", Income.start_date)).filter(Income.user_id == current_user.id).distinct().all() if y)
     years = sorted({int(y) for y in years} | {selected_year}, reverse=True)
 
+    dashboard_goals = owned_query(SavingsGoal).order_by(
+        SavingsGoal.deadline.is_(None),
+        SavingsGoal.deadline.asc(),
+        SavingsGoal.id.desc()
+    ).limit(3).all()
+
     return render_template(
         "index.html", selected_year=selected_year, years=years,
         income_total=income_total, expense_total=expense_total,
@@ -693,8 +699,114 @@ def index():
         investment_gain=investment_gain,
         investment_return=investment_return,
         investment_count=len(investments),
-        investment_priced_count=priced_investments
+        investment_priced_count=priced_investments,
+        dashboard_goals=dashboard_goals
     )
+
+
+
+# ============================================================
+# SAVINGS GOALS
+# ============================================================
+
+@app.route("/goals")
+@login_required
+def goals():
+    """Show and manage the user's savings goals."""
+    goals = owned_query(SavingsGoal).order_by(
+        SavingsGoal.deadline.is_(None),
+        SavingsGoal.deadline.asc(),
+        SavingsGoal.id.desc()
+    ).all()
+    return render_template("goals.html", goals=goals)
+
+
+@app.route("/goals/add", methods=["POST"])
+@login_required
+def add_goal():
+    name = (request.form.get("name") or "").strip()
+    target_str = (request.form.get("target_amount") or "").strip().replace(",", ".")
+    current_str = (request.form.get("current_amount") or "0").strip().replace(",", ".")
+    deadline = parse_date_or_none(request.form.get("deadline") or "")
+    color = (request.form.get("color") or "blue").lower()
+
+    try:
+        target = float(target_str)
+        current = float(current_str or 0)
+    except ValueError:
+        flash("Vul geldige bedragen in.", "error")
+        return redirect(url_for("goals"))
+
+    if not name or len(name) > 100:
+        flash("Geef je spaardoel een naam van maximaal 100 tekens.", "error")
+        return redirect(url_for("goals"))
+    if target <= 0:
+        flash("Het doelbedrag moet groter zijn dan 0.", "error")
+        return redirect(url_for("goals"))
+    if current < 0:
+        flash("Het huidige bedrag kan niet negatief zijn.", "error")
+        return redirect(url_for("goals"))
+    if color not in {"blue", "purple", "green", "orange", "pink"}:
+        color = "blue"
+
+    target_eur = convert_amount(target, current_user.currency, "EUR")
+    current_eur = convert_amount(current, current_user.currency, "EUR")
+    if target_eur is None or current_eur is None:
+        flash("De wisselkoers is tijdelijk niet beschikbaar. Probeer opnieuw.", "error")
+        return redirect(url_for("goals"))
+
+    goal = SavingsGoal(
+        user_id=current_user.id,
+        name=name,
+        target_amount=round(target_eur, 2),
+        current_amount=round(min(current_eur, target_eur), 2),
+        deadline=deadline,
+        color=color,
+    )
+    db.session.add(goal)
+    db.session.commit()
+    flash("Spaardoel toegevoegd.", "success")
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/add", methods=["POST"])
+@login_required
+def add_goal_progress(goal_id):
+    goal = owned_or_404(SavingsGoal, goal_id)
+    amount_str = (request.form.get("amount") or "").strip().replace(",", ".")
+
+    try:
+        amount = float(amount_str)
+    except ValueError:
+        flash("Vul een geldig bedrag in.", "error")
+        return redirect(url_for("goals"))
+
+    if amount <= 0:
+        flash("Voeg een bedrag groter dan 0 toe.", "error")
+        return redirect(url_for("goals"))
+
+    amount_eur = convert_amount(amount, current_user.currency, "EUR")
+    if amount_eur is None:
+        flash("De wisselkoers is tijdelijk niet beschikbaar. Probeer opnieuw.", "error")
+        return redirect(url_for("goals"))
+
+    goal.current_amount = min(
+        goal.target_amount,
+        round(goal.current_amount + amount_eur, 2)
+    )
+    db.session.commit()
+    flash("Spaargeld toegevoegd aan je doel.", "success")
+    return redirect(url_for("goals"))
+
+
+@app.route("/goals/<int:goal_id>/delete", methods=["POST"])
+@login_required
+def delete_goal(goal_id):
+    goal = owned_or_404(SavingsGoal, goal_id)
+    db.session.delete(goal)
+    db.session.commit()
+    flash("Spaardoel verwijderd.", "success")
+    return redirect(url_for("goals"))
 
 
 @app.route("/expenses")
