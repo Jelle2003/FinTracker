@@ -112,6 +112,10 @@
   </div>
 </section>
 
+<section class="dashboard-alerts-card">
+<div class="financial-insights-head"><div><div class="dashboard-section-eyebrow">MELDINGEN</div><h2>Wat vraagt vandaag aandacht?</h2><p>Automatische signalen op basis van je geregistreerde gegevens.</p></div><a href="{{url_for('notifications')}}" class="portfolio-open-link">Alle alerts <span>→</span></a></div>
+<div class="dashboard-alert-list">{% for kind,message in financial_alerts %}<div class="dashboard-alert dashboard-alert-{{kind}}"><span>{% if kind=='danger' %}!{% elif kind=='warning' %}⚠{% else %}i{% endif %}</span><p>{{message}}</p></div>{% else %}<div class="dashboard-alert dashboard-alert-success"><span>✓</span><p>Geen actieve financiële alerts.</p></div>{% endfor %}</div></section>
+
 <section class="portfolio-dashboard-card">
   <div class="portfolio-dashboard-head">
     <div>
