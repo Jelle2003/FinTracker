@@ -1849,3 +1849,56 @@ body.theme-light .nav-logout:hover{background:#fff1f2!important;border-color:#fe
 
 /* SHARED PAGE CONTAINER */
 .page-shell{width:100%;min-height:100vh;padding:0 20px 36px}.page-container{width:min(1180px,100%);margin:0 auto}.page-shell .site-header{width:min(1180px,100%);margin:0 auto}.page-shell .flash-message{width:min(1180px,100%);margin:12px auto}.page-shell .goals-hero,.page-shell .goals-layout{width:100%}@media(max-width:700px){.page-shell{padding:0 12px 28px}}
+
+
+/* FINTRACK 2.0 — connected planning */
+.financial-insights-card,.portfolio-ai-card{
+  margin-top:24px;
+  padding:20px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:linear-gradient(145deg,var(--surface),#101a29);
+  box-shadow:var(--shadow);
+}
+.financial-insights-head,.portfolio-ai-card{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+.financial-insights-head h2,.portfolio-ai-card h2{margin:4px 0 4px;font-size:1.08rem}
+.financial-insights-head p,.portfolio-ai-card p{margin:0;color:var(--muted);font-size:.86rem}
+.financial-insights-list{display:grid;gap:8px;margin-top:16px}
+.financial-insight{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:11px 13px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:rgba(255,255,255,.018);
+}
+.financial-insight>span{color:#7dd3fc;font-weight:800}
+.financial-insight p{margin:0;color:#cbd5e1;font-size:.86rem}
+.portfolio-ai-card{display:grid;grid-template-columns:1fr auto auto;align-items:center}
+.portfolio-ai-meta{display:flex;gap:8px;flex-wrap:wrap}
+.portfolio-ai-meta span{
+  padding:6px 9px;border:1px solid var(--border);border-radius:999px;
+  color:#cbd5e1;font-size:.75rem;background:var(--surface-2)
+}
+.portfolio-ai-action{
+  padding:10px 13px;border-radius:10px;border:1px solid rgba(56,189,248,.3);
+  background:rgba(14,165,233,.10);color:#7dd3fc;font-weight:650;white-space:nowrap
+}
+.portfolio-ai-card small{grid-column:1/-1;color:#64748b;font-size:.72rem}
+.portfolio-review-note{display:block;max-width:230px;margin-top:5px;color:#94a3b8;font-size:.68rem;line-height:1.35}
+.account-financial-profile{padding:14px;border:1px solid rgba(56,189,248,.18);border-radius:12px;background:rgba(14,165,233,.035)}
+@media(max-width:900px){
+  .portfolio-ai-card{grid-template-columns:1fr}
+  .portfolio-ai-action{justify-self:start}
+}
+@media(max-width:700px){
+  .financial-insights-head{flex-direction:column}
+  .financial-insights-head .portfolio-open-link{align-self:flex-start}
+  .portfolio-ai-action{width:100%;text-align:center}
+}
