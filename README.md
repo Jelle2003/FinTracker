@@ -4,6 +4,16 @@ FINTRACK is een persoonlijke financiële webapp waarmee je inkomsten, uitgaven e
 
 > **Status:** in ontwikkeling. De huidige versie is gebouwd als een Flask-app met templates. Niet alle onderdelen zijn al geschikt voor meerdere gebruikers.
 
+## Thema
+
+FINTRACK ondersteunt automatisch een **licht en donker thema** op basis van de systeem-/browservoorkeur van het toestel. De lichte variant gebruikt een heldere fintech-interface met voldoende contrast; de bestaande donkere variant blijft beschikbaar wanneer het toestel op donker staat.
+
+## Registratie
+
+De registratie bevat server-side validatie, controle op dubbele gebruikersnamen, een bevestiging van het wachtwoord en directe login na een succesvolle registratie. De browser controleert de wachtwoordbevestiging ook voordat het formulier wordt verzonden.
+
+> **Belangrijk:** de huidige financiële tabellen zijn nog niet per gebruiker afgeschermd. Registratie is daarom nog niet bedoeld als volledige multi-user/privacy-oplossing. Voeg gebruikersgebonden data-isolatie en een database-migratie toe voordat meerdere personen FINTRACK met eigen financiële gegevens gebruiken.
+
 ## Functies
 
 - Dashboard met jaaroverzicht, inkomsten, uitgaven, netto saldo en spaarpercentage.
