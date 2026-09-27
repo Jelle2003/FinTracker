@@ -1044,6 +1044,19 @@ footer{
   .brand-mark{font-size:1.04rem;gap:8px}
 }
 
+/* Login theme control: keep it visually separate from the form. */
+.login-page > .theme-toggle{
+  position:absolute;
+  top:20px;
+  right:20px;
+}
+@media(max-width:480px){
+  .login-page > .theme-toggle{
+    top:14px;
+    right:14px;
+  }
+}
+
 /* Explicit theme overrides, so the button wins over the device setting. */
 html[data-theme="dark"]{
   color-scheme:dark;
