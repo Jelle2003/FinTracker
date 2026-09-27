@@ -59,3 +59,14 @@ class Investment(db.Model):
     quantity = db.Column(db.Float, nullable=False, default=0)
     average_price = db.Column(db.Float, nullable=False, default=0)
     currency = db.Column(db.String(3), nullable=False, default="EUR", server_default="EUR")
+
+
+class SavingsGoal(db.Model):
+    """Savings goal belonging to one user."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    target_amount = db.Column(db.Float, nullable=False, default=0)
+    current_amount = db.Column(db.Float, nullable=False, default=0)
+    deadline = db.Column(db.Date, nullable=True)
+    color = db.Column(db.String(20), nullable=False, default="blue", server_default="blue")
