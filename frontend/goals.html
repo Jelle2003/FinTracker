@@ -23,5 +23,66 @@
 </div>
 <aside class="goal-create-card"><div class="account-card-heading"><div><h2>Nieuw spaardoel</h2><p>Bedragen worden opgeslagen in euro en automatisch omgerekend naar je gekozen accountvaluta.</p></div><div class="account-card-icon">+</div></div>
 <form method="post" action="{{url_for('add_goal')}}" class="account-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><div class="account-field"><label for="goal-name">Naam</label><input id="goal-name" name="name" maxlength="100" required placeholder="Bijv. vakantie"></div><div class="account-form-grid"><div class="account-field"><label for="goal-target">Doelbedrag ({{currency_code}})</label><input id="goal-target" name="target_amount" type="number" min="0.01" step="0.01" required placeholder="2500"></div><div class="account-field"><label for="goal-current">Al gespaard ({{currency_code}})</label><input id="goal-current" name="current_amount" type="number" min="0" step="0.01" value="0"></div></div><div class="account-field"><label for="goal-deadline">Deadline <span class="goal-optional">optioneel</span></label><input id="goal-deadline" name="deadline" type="date"></div><div class="account-field"><label>Kleur</label><div class="avatar-options">{% for color,label in [('blue','Blauw'),('purple','Paars'),('green','Groen'),('orange','Oranje'),('pink','Roze')] %}<label class="avatar-option"><input type="radio" name="color" value="{{color}}" {% if loop.first %}checked{% endif %}><span class="avatar-swatch avatar-{{color}}"></span>{{label}}</label>{% endfor %}</div></div><button class="account-save" type="submit">+ Spaardoel aanmaken</button></form></aside></section></div>
-<script nonce="{{g.csp_nonce}}">const nav=document.getElementById("primary-nav"),menu=document.querySelector(".menu-toggle"),theme=document.getElementById("themeToggle");if(menu)menu.addEventListener("click",()=>{const open=nav.classList.toggle("is-open");menu.setAttribute("aria-expanded",String(open));});document.querySelectorAll(".nav-dropdown > summary").forEach(summary=>summary.addEventListener("click",()=>{document.querySelectorAll(".nav-dropdown[open]").forEach(d=>{if(d!==summary.parentElement)d.removeAttribute("open")})}));document.querySelectorAll(".nav-dropdown-menu a").forEach(a=>a.addEventListener("click",()=>a.closest("details")?.removeAttribute("open")));document.addEventListener("click",e=>{if(!e.target.closest(".nav-dropdown"))document.querySelectorAll(".nav-dropdown[open]").forEach(d=>d.removeAttribute("open"));});document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".nav-dropdown[open]").forEach(d=>d.removeAttribute("open"));});const savedTheme=localStorage.getItem("fintrack-theme");if(savedTheme==="light")document.body.classList.add("theme-light");function updateThemeButton(){if(!theme)return;const light=document.body.classList.contains("theme-light");theme.querySelector(".theme-toggle-icon").textContent=light?"☀":"☾";theme.querySelector(".theme-toggle-label").textContent=light?"Licht":"Donker";}theme?.addEventListener("click",()=>{document.body.classList.toggle("theme-light");localStorage.setItem("fintrack-theme",document.body.classList.contains("theme-light")?"light":"dark");updateThemeButton();});updateThemeButton();</script>
+<script nonce="{{g.csp_nonce}}">
+/* FINTRACK_THEME_AND_NAV */
+(() => {
+  const root = document.documentElement;
+  const themeButton = document.getElementById("themeToggle");
+  const menuButton = document.querySelector(".menu-toggle");
+  const nav = document.getElementById("primary-nav");
+  const themeKey = "fintrack-theme";
+
+  const applyTheme = mode => {
+    root.dataset.theme = mode;
+    document.body.classList.toggle("theme-light", mode === "light");
+    document.body.classList.toggle("theme-dark", mode === "dark");
+
+    if (themeButton) {
+      themeButton.querySelector(".theme-toggle-icon").textContent = mode === "light" ? "☀" : "☾";
+      themeButton.querySelector(".theme-toggle-label").textContent = mode === "light" ? "Licht" : "Donker";
+      themeButton.title = mode === "light" ? "Schakel naar donker thema" : "Schakel naar licht thema";
+      themeButton.setAttribute("aria-label", themeButton.title);
+    }
+
+    localStorage.setItem(themeKey, mode);
+    window.dispatchEvent(new CustomEvent("fintrack-theme-change", { detail: { mode } }));
+  };
+
+  const saved = localStorage.getItem(themeKey);
+  const initial = saved === "light" || saved === "dark"
+    ? saved
+    : (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+
+  applyTheme(initial);
+
+  themeButton?.addEventListener("click", () => {
+    applyTheme(root.dataset.theme === "light" ? "dark" : "light");
+  });
+
+  if (menuButton && nav) {
+    menuButton.addEventListener("click", () => {
+      const open = menuButton.getAttribute("aria-expanded") === "true";
+      menuButton.setAttribute("aria-expanded", String(!open));
+      menuButton.setAttribute("aria-label", open ? "Menu openen" : "Menu sluiten");
+      nav.classList.toggle("is-open", !open);
+    });
+
+    nav.querySelectorAll(".nav-dropdown-menu a").forEach(link => {
+      link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
+    });
+
+    document.addEventListener("click", event => {
+      nav.querySelectorAll(".nav-dropdown[open]").forEach(dropdown => {
+        if (!dropdown.contains(event.target)) dropdown.removeAttribute("open");
+      });
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        nav.querySelectorAll(".nav-dropdown[open]").forEach(dropdown => dropdown.removeAttribute("open"));
+      }
+    });
+  }
+})();
+</script>
 </main></body></html>
