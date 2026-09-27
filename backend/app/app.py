@@ -218,23 +218,23 @@ def index():
     year_end = date(selected_year, 12, 31)
 
     expense_total = db.session.query(func.sum(Expense.amount)).filter(
-        Expense.date >= year_start, Expense.date <= year_end
+        Expense.user_id == current_user.id, Expense.date >= year_start, Expense.date <= year_end
     ).scalar() or 0
 
     income_total = db.session.query(func.sum(Income.amount)).filter(
-        Income.start_date >= year_start, Income.start_date <= year_end
+        Income.user_id == current_user.id, Income.start_date >= year_start, Income.start_date <= year_end
     ).scalar() or 0
 
     monthly_income = dict(db.session.query(
         func.strftime("%m", Income.start_date), func.sum(Income.amount)
     ).filter(
-        Income.start_date >= year_start, Income.start_date <= year_end
+        Income.user_id == current_user.id, Income.start_date >= year_start, Income.start_date <= year_end
     ).group_by(func.strftime("%m", Income.start_date)).all())
 
     monthly_expenses = dict(db.session.query(
         func.strftime("%m", Expense.date), func.sum(Expense.amount)
     ).filter(
-        Expense.date >= year_start, Expense.date <= year_end
+        Expense.user_id == current_user.id, Expense.date >= year_start, Expense.date <= year_end
     ).group_by(func.strftime("%m", Expense.date)).all())
 
     month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -245,18 +245,18 @@ def index():
     category_rows = db.session.query(
         Expense.category, func.sum(Expense.amount)
     ).filter(
-        Expense.date >= year_start, Expense.date <= year_end
+        Expense.user_id == current_user.id, Expense.date >= year_start, Expense.date <= year_end
     ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).all()
 
-    recent_expenses = Expense.query.order_by(Expense.date.desc(), Expense.id.desc()).limit(5).all()
-    recent_incomes = Income.query.order_by(Income.start_date.desc(), Income.id.desc()).limit(5).all()
+    recent_expenses = owned_query(Expense).order_by(Expense.date.desc(), Expense.id.desc()).limit(5).all()
+    recent_incomes = owned_query(Income).order_by(Income.start_date.desc(), Income.id.desc()).limit(5).all()
 
     # --------------------------------------------------------
     # Beleggingssamenvatting
     # De dashboardcijfers komen rechtstreeks uit dezelfde
     # Investment-tabel als de pagina "Beleggen".
     # --------------------------------------------------------
-    investments = Investment.query.order_by(Investment.name.asc()).all()
+    investments = owned_query(Investment).order_by(Investment.name.asc()).all()
     investment_rows = []
     investment_total_cost = 0.0
     investment_market_value = 0.0
@@ -308,8 +308,8 @@ def index():
     savings_rate = round((balance / income_total) * 100, 1) if income_total else 0
 
     years = {date.today().year}
-    years.update(y for (y,) in db.session.query(func.strftime("%Y", Expense.date)).distinct().all() if y)
-    years.update(y for (y,) in db.session.query(func.strftime("%Y", Income.start_date)).distinct().all() if y)
+    years.update(y for (y,) in db.session.query(func.strftime("%Y", Expense.date)).filter(Expense.user_id == current_user.id).distinct().all() if y)
+    years.update(y for (y,) in db.session.query(func.strftime("%Y", Income.start_date)).filter(Income.user_id == current_user.id).distinct().all() if y)
     years = sorted({int(y) for y in years} | {selected_year}, reverse=True)
 
     return render_template(
@@ -345,24 +345,24 @@ def expenses():
         start_date = end_date = None
         start_str = end_str = ""
 
-    q = Expense.query
+    q = owned_query(Expense)
     if start_date:
-        q = q.filter(Expense.date >= start_date)
+        q = q.filter(Expense.user_id == current_user.id, Expense.date >= start_date)
     if end_date:
-        q = q.filter(Expense.date <= end_date)
+        q = q.filter(Expense.user_id == current_user.id, Expense.date <= end_date)
     if selected_category:
-        q = q.filter(Expense.category == selected_category)
+        q = q.filter(Expense.user_id == current_user.id, Expense.category == selected_category)
     expenses = q.order_by(Expense.date.desc(), Expense.id.desc()).all()
     total = round(sum(e.amount for e in expenses), 2)
 
-    cat_q = db.session.query(Expense.category, func.sum(Expense.amount))
-    day_q = db.session.query(Expense.date, func.sum(Expense.amount))
-    cat_rows = cat_q.filter(*([Expense.date >= start_date] if start_date else []),
-                            *([Expense.date <= end_date] if end_date else []),
-                            *([Expense.category == selected_category] if selected_category else [])).group_by(Expense.category).all()
-    day_rows = day_q.filter(*([Expense.date >= start_date] if start_date else []),
-                            *([Expense.date <= end_date] if end_date else []),
-                            *([Expense.category == selected_category] if selected_category else [])).group_by(Expense.date).order_by(Expense.date).all()
+    cat_q = db.session.query(Expense.category, func.sum(Expense.amount)).filter(Expense.user_id == current_user.id)
+    day_q = db.session.query(Expense.date, func.sum(Expense.amount)).filter(Expense.user_id == current_user.id)
+    cat_rows = cat_q.filter(*([Expense.user_id == current_user.id, Expense.date >= start_date] if start_date else []),
+                            *([Expense.user_id == current_user.id, Expense.date <= end_date] if end_date else []),
+                            *([Expense.user_id == current_user.id, Expense.category == selected_category] if selected_category else [])).group_by(Expense.category).all()
+    day_rows = day_q.filter(*([Expense.user_id == current_user.id, Expense.date >= start_date] if start_date else []),
+                            *([Expense.user_id == current_user.id, Expense.date <= end_date] if end_date else []),
+                            *([Expense.user_id == current_user.id, Expense.category == selected_category] if selected_category else [])).group_by(Expense.date).order_by(Expense.date).all()
     return render_template("expenses.html", categories=CATEGORIES,
         today=date.today().isoformat(), expenses=expenses, total=total,
         start_str=start_str, end_str=end_str, selected_category=selected_category,
@@ -433,7 +433,8 @@ def add():
         description=description,
         amount=amount,
         category=category,
-        date=d
+        date=d,
+        user_id=current_user.id
     )
 
     db.session.add(expense)
@@ -452,7 +453,7 @@ def add():
 @login_required
 def delete(expense_id):
 
-    expense = Expense.query.get_or_404(expense_id)
+    expense = owned_or_404(Expense, expense_id)
 
     db.session.delete(expense)
     db.session.commit()
@@ -470,7 +471,7 @@ def delete(expense_id):
 @login_required
 def edit(expense_id):
 
-    expense = Expense.query.get_or_404(expense_id)
+    expense = owned_or_404(Expense, expense_id)
 
     return render_template(
         "edit.html",
@@ -484,7 +485,7 @@ def edit(expense_id):
 @login_required
 def edit_post(expense_id):
 
-    expense = Expense.query.get_or_404(expense_id)
+    expense = owned_or_404(Expense, expense_id)
 
     description = (
         request.form.get("description") or ""
@@ -567,7 +568,7 @@ def edit_post(expense_id):
 @app.route("/income")
 @login_required
 def income():
-    incomes = Income.query.order_by(
+    incomes = owned_query(Income).order_by(
         Income.start_date.desc(),
         Income.id.desc()
     ).all()
@@ -578,7 +579,7 @@ def income():
     month_rows = db.session.query(
         month_expression,
         func.sum(Income.amount)
-    ).group_by(
+    ).filter(Income.user_id == current_user.id).group_by(
         month_expression
     ).order_by(
         month_expression
@@ -634,7 +635,8 @@ def add_income():
         amount=amount,
         category=category,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        user_id=current_user.id
     )
 
     db.session.add(income_item)
@@ -647,7 +649,7 @@ def add_income():
 @app.route("/income/delete/<int:income_id>", methods=["POST"])
 @login_required
 def delete_income(income_id):
-    income_item = Income.query.get_or_404(income_id)
+    income_item = owned_or_404(Income, income_id)
 
     db.session.delete(income_item)
     db.session.commit()
@@ -659,7 +661,7 @@ def delete_income(income_id):
 @app.route("/income/edit/<int:income_id>", methods=["GET"])
 @login_required
 def edit_income(income_id):
-    income_item = Income.query.get_or_404(income_id)
+    income_item = owned_or_404(Income, income_id)
 
     return render_template(
         "income_edit.html",
@@ -671,7 +673,7 @@ def edit_income(income_id):
 @app.route("/income/edit/<int:income_id>", methods=["POST"])
 @login_required
 def edit_income_post(income_id):
-    income_item = Income.query.get_or_404(income_id)
+    income_item = owned_or_404(Income, income_id)
 
     description = (request.form.get("description") or "").strip()
     amount_str = (request.form.get("amount") or "").strip()
@@ -891,7 +893,7 @@ def ollama_chat(prompt, model=None):
 @app.route("/investing")
 @login_required
 def investing():
-    holdings = Investment.query.order_by(Investment.symbol).all()
+    holdings = owned_query(Investment).order_by(Investment.symbol).all()
     rows = []
     total_cost = 0.0
     total_value = 0.0
@@ -928,7 +930,8 @@ def add_investment():
         flash("Vul een geldig symbool, aantal en aankoopprijs in.", "error")
         return redirect(url_for("investing"))
     db.session.add(Investment(symbol=symbol, name=name, asset_type=asset_type,
-                              quantity=quantity, average_price=average_price))
+                              quantity=quantity, average_price=average_price,
+                              user_id=current_user.id))
     db.session.commit()
     flash("Belegging toegevoegd.", "success")
     return redirect(url_for("investing"))
@@ -937,7 +940,7 @@ def add_investment():
 @app.route("/investing/delete/<int:investment_id>", methods=["POST"])
 @login_required
 def delete_investment(investment_id):
-    item = Investment.query.get_or_404(investment_id)
+    item = owned_or_404(Investment, investment_id)
     db.session.delete(item)
     db.session.commit()
     flash("Belegging verwijderd.", "success")
@@ -962,7 +965,7 @@ def ai_investor():
         if not question:
             flash("Stel eerst een vraag.", "error")
         else:
-            holdings = Investment.query.all()
+            holdings = owned_query(Investment).all()
             portfolio = []
             holding_symbols = []
 
