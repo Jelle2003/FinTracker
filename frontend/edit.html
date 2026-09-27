@@ -7,6 +7,8 @@
 
   <section class="max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-4">
     <form method="post" action="{{ url_for('edit_post', expense_id=expense.id) }}" class="space-y-3">
+                {{ csrf_token() }}
+                {{ csrf_token() }}
       <label class="block text-sm">
         <span class="mb-1 block text-slate-300">Description</span>
         <input name="description"
