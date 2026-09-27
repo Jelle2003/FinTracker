@@ -40,9 +40,43 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# Create database tables
+# Create database tables and safely upgrade older SQLite databases.
+# Existing financial records are assigned to the first existing account so
+# upgrading a single-user installation does not lose its data.
 with app.app_context():
     db.create_all()
+
+    with db.engine.begin() as connection:
+        for table in ("expense", "income", "investment"):
+            columns = {row[1] for row in connection.exec_driver_sql(f"PRAGMA table_info({table})")}
+            if "user_id" not in columns:
+                connection.exec_driver_sql(
+                    f"ALTER TABLE {table} ADD COLUMN user_id INTEGER REFERENCES user(id)"
+                )
+
+        first_user = connection.exec_driver_sql(
+            "SELECT id FROM user ORDER BY id LIMIT 1"
+        ).fetchone()
+
+        if first_user:
+            for table in ("expense", "income", "investment"):
+                connection.exec_driver_sql(
+                    f"UPDATE {table} SET user_id = ? WHERE user_id IS NULL",
+                    (first_user[0],)
+                )
+
+
+def owned_query(model):
+    """Return only records owned by the logged-in user."""
+    return model.query.filter(model.user_id == current_user.id)
+
+
+def owned_or_404(model, record_id):
+    """Fetch a record only when it belongs to the logged-in user."""
+    return model.query.filter(
+        model.id == record_id,
+        model.user_id == current_user.id
+    ).first_or_404()
 
 
 CATEGORIES = [
