@@ -116,6 +116,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
 
+    username = ""
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
@@ -126,13 +127,16 @@ def register():
             return render_template("register.html", username=username)
         if len(password) < 10:
             flash("Gebruik een wachtwoord van minstens 10 tekens.", "error")
-            return render_template("register.html")
+            return render_template("register.html", username=username)
+        if len(password) > 128:
+            flash("Gebruik een wachtwoord van maximaal 128 tekens.", "error")
+            return render_template("register.html", username=username)
         if password != confirm_password:
             flash("De wachtwoorden komen niet overeen.", "error")
-            return render_template("register.html")
+            return render_template("register.html", username=username)
         if User.query.filter_by(username=username).first():
             flash("Deze gebruikersnaam is al in gebruik.", "error")
-            return render_template("register.html")
+            return render_template("register.html", username=username)
 
         user = User(username=username)
         user.set_password(password)
@@ -148,8 +152,7 @@ def register():
         flash("Je account is aangemaakt. Welkom bij FINTRACK!", "success")
         return redirect(url_for("index"))
 
-    return render_template("register.html")
-
+    return render_template("register.html", username=username)
 
 @app.route("/logout")
 @login_required
