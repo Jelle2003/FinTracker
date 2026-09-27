@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
     expenses = db.relationship("Expense", backref="user", lazy=True, cascade="all, delete-orphan")
     incomes = db.relationship("Income", backref="user", lazy=True, cascade="all, delete-orphan")
     investments = db.relationship("Investment", backref="user", lazy=True, cascade="all, delete-orphan")
+    investment_events = db.relationship("InvestmentEvent", backref="user", lazy=True, cascade="all, delete-orphan")
 
     # Store only a password hash; the original password is never saved.
     def set_password(self, password):
