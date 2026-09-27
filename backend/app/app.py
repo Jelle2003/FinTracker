@@ -207,8 +207,15 @@ def login():
         flash("Welcome back!", "success")
 
         next_page = request.args.get("next")
+        parsed_next = urllib.parse.urlparse(next_page or "")
 
-        if next_page and next_page.startswith("/"):
+        # Only allow local relative redirects; block //host and absolute URLs.
+        if (
+            next_page
+            and parsed_next.scheme == ""
+            and parsed_next.netloc == ""
+            and parsed_next.path.startswith("/")
+        ):
             return redirect(next_page)
 
         return redirect(url_for("index"))
