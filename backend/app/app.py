@@ -1619,6 +1619,8 @@ def market():
 def ai_investor():
     answer = None
     question = ""
+    if request.args.get("mode") == "portfolio":
+        question = "Analyseer mijn volledige portefeuille in combinatie met mijn financiële profiel en spaardoelen. Benoem welke posities ik opnieuw moet beoordelen, welke risico's en concentraties je ziet en welke soorten beleggingen eventueel beter bij mijn profiel passen. Geef scenario's en onderbouwing, geen garanties."
 
     if request.method == "POST":
         question = (request.form.get("question") or "").strip()
