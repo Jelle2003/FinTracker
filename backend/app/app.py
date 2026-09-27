@@ -178,6 +178,37 @@ with app.app_context():
                 )
 
 
+def exchange_rate(from_currency, to_currency):
+    """Get the current exchange rate. Financial data stays stored in EUR."""
+    from_currency = (from_currency or "EUR").upper()
+    to_currency = (to_currency or "EUR").upper()
+    if from_currency == to_currency:
+        return 1.0
+    if from_currency == "EUR":
+        quote = market_price(f"EUR{to_currency}=X")
+        return quote["price"] if quote else None
+    if to_currency == "EUR":
+        rate = exchange_rate("EUR", from_currency)
+        return (1 / rate) if rate else None
+    to_eur = exchange_rate(from_currency, "EUR")
+    eur_to_target = exchange_rate("EUR", to_currency)
+    return to_eur * eur_to_target if to_eur and eur_to_target else None
+
+
+def convert_amount(amount, from_currency, to_currency):
+    rate = exchange_rate(from_currency, to_currency)
+    return amount * rate if rate is not None else None
+
+
+# Add the investment currency to older databases.
+with app.app_context():
+    inspector = inspect(db.engine)
+    columns = {column["name"] for column in inspector.get_columns("investment")}
+    if "currency" not in columns:
+        with db.engine.begin() as connection:
+            connection.execute(text("ALTER TABLE investment ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'"))
+
+
 def currency_info():
     """Return the currency chosen by the logged-in user."""
     code = getattr(current_user, "currency", "EUR") if current_user.is_authenticated else "EUR"
