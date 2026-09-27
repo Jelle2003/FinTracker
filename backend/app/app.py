@@ -910,11 +910,11 @@ def edit_post(expense_id):
                 "%Y-%m-%d"
             ).date()
             if date_str
-            else dt_date.today()
+            else date.today()
         )
 
     except ValueError:
-        d = dt_date.today()
+        d = date.today()
 
     expense.description = description
     expense.amount = amount
