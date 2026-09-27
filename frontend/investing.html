@@ -78,13 +78,70 @@
 </div>
 <section class="investment-analytics-grid">{% for title,data in [('Assetverdeling',asset_alloc),('Sectoren',sector_alloc),('Regio’s',region_alloc)] %}<div class="investment-analytics-card"><div class="dashboard-section-eyebrow">{{title}}</div><h2>{{title}}</h2>{% for item in data %}<div class="allocation-row"><div><span>{{item.name}}</span><i><b style="width:{{[item.share,100]|min}}%"></b></i></div><strong>{{'%.1f'|format(item.share)}}%</strong></div>{% else %}<p class="analytics-empty">Nog geen data.</p>{% endfor %}</div>{% endfor %}</section>
 <section class="investment-events-card"><div class="investment-section-head"><div><div class="dashboard-section-eyebrow">BELEGGINGSLOGBOEK</div><h2>Transacties & dividend</h2><p>Aankopen, verkopen en ontvangen dividend.</p></div><strong class="dividend-total">Dividend: {{money(dividend_total)}}</strong></div>
-<form method="post" action="{{url_for('add_investment_event')}}" class="investment-event-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><input name="symbol" placeholder="Ticker" required maxlength="20"><select name="event_type"><option value="buy">Aankoop</option><option value="sell">Verkoop</option><option value="dividend">Dividend</option></select><input name="quantity" type="number" min="0" step="0.000001" placeholder="Aantal"><input name="price" type="number" min="0" step="0.01" placeholder="Prijs/stuk"><input name="amount" type="number" min="0" step="0.01" placeholder="Bedrag"><input name="currency" value="{{currency_code}}" maxlength="3" placeholder="Valuta"><input name="date" type="date"><input name="note" maxlength="160" placeholder="Notitie"><button type="submit">Opslaan</button></form>
+<form method="post" action="{{url_for('add_investment_event')}}" class="investment-event-form" id="investment-event-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<div class="investment-event-field investment-event-symbol-field">
+<label for="event-symbol">Belegging / ticker</label>
+<div class="investment-event-symbol-wrap">
+<input id="event-symbol" name="symbol" maxlength="20" placeholder="Bijv. AAPL of VWCE" autocomplete="off" required aria-controls="event-symbol-results" aria-expanded="false">
+<div id="event-symbol-results" class="investment-event-symbol-results" hidden></div>
+</div>
+<small>Typ een naam of ticker en kies de juiste belegging uit de lijst. Zo voorkom je tikfouten.</small>
+</div>
+<div class="investment-event-field">
+<label for="event-type">Type</label>
+<select id="event-type" name="event_type"><option value="buy">Aankoop</option><option value="sell">Verkoop</option><option value="dividend">Dividend</option></select>
+<small class="event-type-help">Aankoop/verkoop = aantal verplicht. Dividend = bedrag verplicht.</small>
+</div>
+<div class="investment-event-field"><label for="event-quantity">Aantal</label><input id="event-quantity" name="quantity" type="number" min="0" step="0.000001" placeholder="Bijv. 2"></div>
+<div class="investment-event-field"><label for="event-price">Prijs per stuk</label><input id="event-price" name="price" type="number" min="0" step="0.01" placeholder="Bijv. 180"></div>
+<div class="investment-event-field"><label for="event-amount">Bedrag</label><input id="event-amount" name="amount" type="number" min="0" step="0.01" placeholder="Bijv. 25"></div>
+<div class="investment-event-field"><label for="event-currency">Valuta</label><input id="event-currency" name="currency" value="{{currency_code}}" maxlength="3" placeholder="EUR"></div>
+<div class="investment-event-field"><label for="event-date">Datum</label><input id="event-date" name="date" type="date"></div>
+<div class="investment-event-field"><label for="event-note">Notitie</label><input id="event-note" name="note" maxlength="160" placeholder="Optioneel"></div>
+<button type="submit">Opslaan</button>
+</form>
 <div class="investment-event-list">{% for event in events %}<div class="investment-event-row"><div><strong>{{event.symbol}}</strong><span>{{ {'buy':'Aankoop','sell':'Verkoop','dividend':'Dividend'}.get(event.event_type,event.event_type) }} · {{event.date.strftime('%d-%m-%Y')}}</span></div><strong>{{money(event.amount,event.currency)}}</strong><form method="post" action="{{url_for('delete_investment_event',event_id=event.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button type="submit">×</button></form></div>{% else %}<p class="analytics-empty">Nog geen beleggingsactiviteiten geregistreerd.</p>{% endfor %}</div></section>
 </main>
 <script nonce="{{ g.csp_nonce }}">
 (()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(toggle&&nav){toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});}})();
 
 (()=> {
+ const eventInput=document.getElementById("event-symbol"), eventResults=document.getElementById("event-symbol-results"), eventForm=document.getElementById("investment-event-form");
+ let eventTimer=null,eventController=null,eventActive=[];
+ function setEventResults(items){
+   eventActive=items; eventResults.innerHTML="";
+   if(!items.length){eventResults.innerHTML='<div class="investment-event-no-results">Geen belegging gevonden. Probeer de naam of ticker opnieuw.</div>';eventResults.hidden=false;eventInput.setAttribute("aria-expanded","true");return;}
+   items.forEach((item,index)=>{
+     const button=document.createElement("button");button.type="button";button.className="investment-event-result";button.dataset.index=index;
+     button.innerHTML='<strong></strong><small></small>';
+     button.querySelector("strong").textContent=item.symbol+" · "+item.name;
+     button.querySelector("small").textContent=[item.asset_type,item.exchange].filter(Boolean).join(" · ");
+     button.addEventListener("click",()=>{eventInput.value=item.symbol;eventResults.hidden=true;eventInput.setAttribute("aria-expanded","false");});
+     eventResults.appendChild(button);
+   });
+   eventResults.hidden=false;eventInput.setAttribute("aria-expanded","true");
+ }
+ if(eventInput&&eventResults&&eventForm){
+   eventInput.addEventListener("input",()=>{
+     const q=eventInput.value.trim(); clearTimeout(eventTimer); if(eventController)eventController.abort();
+     if(q.length<2){eventResults.hidden=true;eventInput.setAttribute("aria-expanded","false");return;}
+     eventTimer=setTimeout(async()=>{
+       try{
+         eventController=new AbortController();
+         const response=await fetch("/api/investing/search?q="+encodeURIComponent(q),{signal:eventController.signal,headers:{"Accept":"application/json"}});
+         if(!response.ok)throw new Error("search");
+         const data=await response.json();setEventResults(data.results||[]);
+       }catch(error){if(error.name!=="AbortError"){eventResults.innerHTML='<div class="investment-event-no-results">Zoeken lukt momenteel niet.</div>';eventResults.hidden=false;}}
+     },220);
+   });
+   eventInput.addEventListener("keydown",e=>{
+     if(e.key==="Escape"){eventResults.hidden=true;eventInput.setAttribute("aria-expanded","false");}
+     if(e.key==="Enter"&&!eventResults.hidden&&eventActive.length){e.preventDefault();eventInput.value=eventActive[0].symbol;eventResults.hidden=true;eventInput.setAttribute("aria-expanded","false");}
+   });
+   document.addEventListener("click",e=>{if(!e.target.closest(".investment-event-symbol-field")){eventResults.hidden=true;eventInput.setAttribute("aria-expanded","false");}});
+ }
+
  const input=document.getElementById("investment-search"), results=document.getElementById("investment-results");
  const form=document.getElementById("investment-form"), submit=document.getElementById("investment-submit");
  const selected=document.getElementById("selected-investment"), symbol=document.getElementById("investment-symbol"), name=document.getElementById("investment-name"), type=document.getElementById("investment-type");
