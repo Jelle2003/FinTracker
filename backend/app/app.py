@@ -54,6 +54,9 @@ app.config.update(
     REMEMBER_COOKIE_SAMESITE="Lax",
     PERMANENT_SESSION_LIFETIME=1800,
     SESSION_REFRESH_EACH_REQUEST=True,
+    MAX_CONTENT_LENGTH=1 * 1024 * 1024,
+    MAX_FORM_MEMORY_SIZE=500_000,
+    MAX_FORM_PARTS=100,
 )
 
 # nginx terminates HTTPS before forwarding the request to Gunicorn.
