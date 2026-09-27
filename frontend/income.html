@@ -16,7 +16,7 @@
 </a><button class="menu-toggle" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="primary-nav"><span></span><span></span><span></span></button><button type="button" class="theme-toggle" id="themeToggle" aria-label="Thema wisselen" title="Licht/donker thema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Donker</span></button><nav id="primary-nav" class="primary-nav" aria-label="Hoofdnavigatie">
       <a href="{{url_for('index')}}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">Overzicht</a>
 
-      <details class="nav-dropdown" {% if request.endpoint in ['income','expenses'] %}open{% endif %}>
+      <details class="nav-dropdown">
         <summary class="{% if request.endpoint in ['income','expenses'] %}is-active{% endif %}">
           <span>Financiën</span><span class="nav-chevron" aria-hidden="true">⌄</span>
         </summary>
@@ -30,7 +30,7 @@
         </div>
       </details>
 
-      <details class="nav-dropdown" {% if request.endpoint in ['investing','market'] %}open{% endif %}>
+      <details class="nav-dropdown">
         <summary class="{% if request.endpoint in ['investing','market'] %}is-active{% endif %}">
           <span>Vermogen</span><span class="nav-chevron" aria-hidden="true">⌄</span>
         </summary>
@@ -48,7 +48,7 @@
         <span class="nav-ai-dot" aria-hidden="true">✦</span> AI Adviseur
       </a>
 
-      <details class="nav-dropdown nav-account-dropdown" {% if request.endpoint in ['account','admin'] %}open{% endif %}>
+      <details class="nav-dropdown nav-account-dropdown">
         <summary class="{% if request.endpoint in ['account','admin'] %}is-active{% endif %}">
           <span>Account</span><span class="nav-chevron" aria-hidden="true">⌄</span>
         </summary>
