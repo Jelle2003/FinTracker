@@ -178,6 +178,20 @@ with app.app_context():
                 )
 
 
+def currency_info():
+    """Return the currency chosen by the logged-in user."""
+    code = getattr(current_user, "currency", "EUR") if current_user.is_authenticated else "EUR"
+    return {
+        "currency_code": code,
+        "currency_symbol": {"EUR": "€", "USD": "$", "GBP": "£"}.get(code, "€"),
+    }
+
+
+@app.context_processor
+def inject_currency():
+    return currency_info()
+
+
 def owned_query(model):
     """Return only records owned by the logged-in user."""
     return model.query.filter(model.user_id == current_user.id)
