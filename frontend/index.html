@@ -166,6 +166,16 @@
   {% endif %}
 </section>
 
+<section class="financial-insights-card">
+  <div class="financial-insights-head">
+    <div><div class="dashboard-section-eyebrow">FINTRACK 2.0</div><h2>Wat vraagt nu je aandacht?</h2><p>Cashflow, spaardoelen en beleggingen worden samen bekeken.</p></div>
+    <a href="{{url_for('ai_investor', mode='portfolio')}}" class="portfolio-open-link">Laat AI analyseren <span>→</span></a>
+  </div>
+  <div class="financial-insights-list">
+    {% for insight in financial_insights %}<div class="financial-insight"><span>✦</span><p>{{insight}}</p></div>{% endfor %}
+  </div>
+</section>
+
 <section class="portfolio-dashboard-card">
   <div class="portfolio-dashboard-head">
     <div>
