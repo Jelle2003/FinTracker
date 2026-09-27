@@ -75,22 +75,60 @@
 <script nonce="{{ g.csp_nonce }}">
 const monthLabels={{(month_labels or [])|tojson}},monthValues={{(month_values or [])|tojson}};
 function drawIncomeChart(){
-  const host=document.getElementById("incomeChart");if(!host)return;host.innerHTML="";
+  const host=document.getElementById("incomeChart");
+  if(!host)return;
+  host.innerHTML="";
   const light=document.documentElement.dataset.theme==="light";
   const text=light?"#475569":"#cbd5e1",grid=light?"#e2e8f0":"#263449",barColor=light?"#0284c7":"#38bdf8";
   if(!monthValues.length){host.innerHTML='<div class="dashboard-empty-chart"><span>○</span><p>Nog geen inkomsten.</p></div>';return;}
-  const w=860,h=300,p={l:48,r:18,t:24,b:44},iw=w-p.l-p.r,ih=h-p.t-p.b,max=Math.max(...monthValues,1)*1.12,x=i=>p.l+(i/(monthValues.length-1||1))*iw;
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.classList.add("native-income-svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("role","img");svg.setAttribute("aria-label","Inkomsten per maand");
-  for(let i=0;i<=4;i++){const yy=p.t+ih*i/4,line=document.createElementNS("http://www.w3.org/2000/svg","line");line.setAttribute("x1",p.l);line.setAttribute("x2",w-p.r);line.setAttribute("y1",yy);line.setAttribute("y2",yy);line.setAttribute("stroke",grid);line.setAttribute("stroke-dasharray","4 6");svg.appendChild(line);}
-  const step=iw/monthValues.length,barWidth=Math.min(52,step*.62);
-  monthValues.forEach((v,i)=>{const bh=(v/max)*ih,xx=p.l+i*step+(step-barWidth)/2,yy=p.t+ih-bh;
-    const bar=document.createElementNS("http://www.w3.org/2000/svg","rect");bar.setAttribute("x",xx);bar.setAttribute("y",yy);bar.setAttribute("width",barWidth);bar.setAttribute("height",Math.max(bh,2));bar.setAttribute("rx","8");bar.setAttribute("fill",barColor);bar.setAttribute("fill-opacity",".82");svg.appendChild(bar);
-    const label=document.createElementNS("http://www.w3.org/2000/svg","text");label.textContent=monthLabels[i];label.setAttribute("x",xx+barWidth/2);label.setAttribute("y",h-14);label.setAttribute("text-anchor","middle");label.setAttribute("fill",text);label.setAttribute("font-size","11");svg.appendChild(label);
-    if(v>0){const amount=document.createElementNS("http://www.w3.org/2000/svg","text");amount.textContent="€"+Math.round(v);amount.setAttribute("x",xx+barWidth/2);amount.setAttribute("y",Math.max(yy-7,12));amount.setAttribute("text-anchor","middle");amount.setAttribute("fill",text);amount.setAttribute("font-size","10");amount.setAttribute("font-weight","700");svg.appendChild(amount);}
+
+  const available=Math.max(host.clientWidth||860,320);
+  const mobile=available<600;
+  const w=Math.round(available),h=mobile?270:300;
+  const p={l:mobile?38:48,r:mobile?10:18,t:24,b:mobile?38:44};
+  const iw=w-p.l-p.r,ih=h-p.t-p.b,max=Math.max(...monthValues,1)*1.12;
+  const step=iw/monthValues.length,barWidth=Math.min(mobile?24:52,step*.62);
+
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.classList.add("native-income-svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);
+  svg.setAttribute("width","100%");svg.setAttribute("height",String(h));svg.setAttribute("role","img");svg.setAttribute("aria-label","Inkomsten per maand");
+
+  const title=document.createElementNS("http://www.w3.org/2000/svg","title");
+  title.textContent="Inkomsten per maand";svg.appendChild(title);
+
+  for(let i=0;i<=4;i++){
+    const yy=p.t+ih*i/4,line=document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1",p.l);line.setAttribute("x2",w-p.r);line.setAttribute("y1",yy);line.setAttribute("y2",yy);
+    line.setAttribute("stroke",grid);line.setAttribute("stroke-dasharray","4 6");svg.appendChild(line);
+  }
+
+  monthValues.forEach((v,i)=>{
+    const bh=(v/max)*ih,xx=p.l+i*step+(step-barWidth)/2,yy=p.t+ih-bh;
+    const bar=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    bar.setAttribute("x",xx);bar.setAttribute("y",yy);bar.setAttribute("width",barWidth);bar.setAttribute("height",Math.max(bh,2));
+    bar.setAttribute("rx",mobile?"6":"8");bar.setAttribute("fill",barColor);bar.setAttribute("fill-opacity",".82");
+    const barTitle=document.createElementNS("http://www.w3.org/2000/svg","title");
+    barTitle.textContent=monthLabels[i]+": €"+Number(v).toFixed(2);bar.appendChild(barTitle);svg.appendChild(bar);
+
+    if(!mobile||i%2===0){
+      const label=document.createElementNS("http://www.w3.org/2000/svg","text");
+      label.textContent=monthLabels[i];label.setAttribute("x",xx+barWidth/2);label.setAttribute("y",h-12);
+      label.setAttribute("text-anchor","middle");label.setAttribute("fill",text);label.setAttribute("font-size",mobile?"10":"11");svg.appendChild(label);
+    }
+    if(v>0&&(!mobile||v===Math.max(...monthValues))){
+      const amount=document.createElementNS("http://www.w3.org/2000/svg","text");
+      amount.textContent="€"+Math.round(v);amount.setAttribute("x",xx+barWidth/2);amount.setAttribute("y",Math.max(yy-7,12));
+      amount.setAttribute("text-anchor","middle");amount.setAttribute("fill",text);amount.setAttribute("font-size",mobile?"9":"10");amount.setAttribute("font-weight","700");svg.appendChild(amount);
+    }
   });
   host.appendChild(svg);
 }
 drawIncomeChart();window.addEventListener("fintrack-theme-change",drawIncomeChart);
+let incomeChartResizeTimer;
+window.addEventListener("resize",()=>{
+  clearTimeout(incomeChartResizeTimer);
+  incomeChartResizeTimer=setTimeout(drawIncomeChart,120);
+});
 </script>
 </script>
 </main>
