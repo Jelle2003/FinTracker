@@ -834,7 +834,19 @@ def goals():
         SavingsGoal.deadline.asc(),
         SavingsGoal.id.desc()
     ).all()
-    return render_template("goals.html", goals=goals)
+    goal_plans = {}
+    today = date.today()
+    for goal in goals:
+        remaining = max(goal.target_amount - goal.current_amount, 0)
+        days_left = (goal.deadline - today).days if goal.deadline else None
+        months_left = max(days_left / 30.44, 1) if days_left is not None and days_left > 0 else None
+        required_monthly = (remaining / months_left) if months_left else 0
+        goal_plans[goal.id] = {
+            "remaining": remaining,
+            "days_left": days_left,
+            "required_monthly": round(required_monthly, 2),
+        }
+    return render_template("goals.html", goals=goals, goal_plans=goal_plans)
 
 
 @app.route("/goals/add", methods=["POST"])
