@@ -17,7 +17,7 @@ FINTRACK is een moderne persoonlijke financiële webapp waarmee je inkomsten, ui
 - **Admin:** gebruikersbeheer, rollen en basisstatistieken voor administrators.
 - **Multi-user:** financiële gegevens zijn per account geïsoleerd.
 - **Responsive UX:** desktop- en mobiele interface met moderne navigatie, hamburger-menu en mobile-first touch targets.
-- **Transacties:** gecombineerd overzicht van inkomsten en uitgaven met zoeken, filters, terugkerende patronen en CSV-export.
+- **Transacties:** gecombineerd overzicht van inkomsten en uitgaven met zoeken, filters, terugkerende patronen en CSV-export van uitsluitend de actieve filterselectie.
 - **Alerts:** automatische signalen voor cashflow, spaardoelen, portefeuilleconcentratie en noodfonds.
 - **Portfolio analytics:** asset-, sector- en regioverdeling plus een beleggingslogboek voor aankopen, verkopen en dividend.
 - **Gedeelde navigatie:** alle ingelogde pagina's gebruiken dezelfde centrale `frontend/_navbar.html`, zodat hoogte, volgorde en UX van de navbar overal identiek blijven.
