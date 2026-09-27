@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Uitgaven · FINTRACK</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.tailwindcss.com"></script>
+<script nonce="{{ g.csp_nonce }}">tailwind.config={darkMode:"class",theme:{extend:{colors:{brand:{DEFAULT:"#38bdf8"}}}}};</script>
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="h-full bg-slate-900 text-slate-100">
@@ -38,7 +38,7 @@
                 {{ csrf_token() }}<button class="text-rose-300">Verwijderen</button></form></div></td></tr>{% else %}<tr><td colspan="5" class="p-6 text-center text-slate-400">Nog geen uitgaven.</td></tr>{% endfor %}
 </tbody></table></section>
 </main>
-<script>new Chart(document.getElementById("catChart"),{type:"doughnut",data:{labels:{{cat_labels|tojson}},datasets:[{data:{{cat_values|tojson}}}]},options:{plugins:{legend:{labels:{color:"#cbd5e1"}}}}});</script>
-<script>
+<script nonce="{{ g.csp_nonce }}">new Chart(document.getElementById("catChart"),{type:"doughnut",data:{labels:{{cat_labels|tojson}},datasets:[{data:{{cat_values|tojson}}}]},options:{plugins:{legend:{labels:{color:"#cbd5e1"}}}}});</script>
+<script nonce="{{ g.csp_nonce }}">
 (()=>{const toggle=document.querySelector(".menu-toggle"),nav=document.getElementById("primary-nav");if(!toggle||!nav)return;toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")==="true";toggle.setAttribute("aria-expanded",String(!open));toggle.setAttribute("aria-label",open?"Menu openen":"Menu sluiten");nav.classList.toggle("is-open",!open);});nav.querySelectorAll("a").forEach(a=>{if(a.pathname===location.pathname)a.classList.add("is-active");});})();
 </script></body></html>
