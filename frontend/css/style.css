@@ -1230,3 +1230,175 @@ a.market-news-title:hover{color:var(--brand)}
   .market-source-note{min-width:100%}
   .market-news-meta{align-items:flex-start;flex-direction:column;gap:3px}
 }
+
+
+/* ============================================================
+   FINTRACK CHART UX — responsive, touch-friendly, mobile-first
+   ============================================================ */
+.chart-wrap,
+.native-income-chart,
+.native-category-chart{
+  width:100%;
+  min-width:0;
+  position:relative;
+}
+
+.chart-wrap-main{height:320px;}
+.chart-wrap-category{height:300px;}
+
+.native-chart,
+.native-donut,
+.native-income-svg,
+.native-bar-chart{
+  display:block;
+  width:100%;
+  max-width:100%;
+}
+
+.native-chart{
+  height:100%;
+  overflow:visible;
+}
+
+.native-donut{
+  height:260px;
+  max-height:100%;
+  margin:0 auto;
+}
+
+.native-income-svg{
+  height:300px;
+}
+
+.native-bar-chart{
+  height:auto;
+  min-height:240px;
+}
+
+.native-chart-legend,
+.native-donut-legend{
+  display:flex;
+  align-items:center;
+  gap:10px 18px;
+  flex-wrap:wrap;
+  margin-top:10px;
+  color:var(--muted);
+  font-size:.7rem;
+}
+
+.native-chart-legend span,
+.native-donut-legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+
+.native-chart-legend i,
+.native-donut-legend i{
+  width:8px;
+  height:8px;
+  flex:0 0 auto;
+  border-radius:50%;
+}
+
+.native-donut-legend{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px 12px;
+  max-height:128px;
+  overflow:auto;
+  padding-right:3px;
+  scrollbar-width:thin;
+}
+
+.native-donut-legend span{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.native-donut-legend b{
+  color:var(--text);
+  font-weight:700;
+}
+
+.dashboard-chart-card{
+  min-width:0;
+  overflow:hidden;
+}
+
+.dashboard-chart-card .chart-wrap,
+.dashboard-chart-card .native-income-chart,
+.dashboard-chart-card .native-category-chart{
+  overflow:hidden;
+}
+
+@media(max-width:760px){
+  .chart-wrap-main{height:280px;}
+  .chart-wrap-category{height:280px;}
+
+  .dashboard-chart-card{
+    padding:14px !important;
+    border-radius:16px !important;
+  }
+
+  .dashboard-card-heading{
+    margin-bottom:8px;
+  }
+
+  .dashboard-card-heading h2{
+    font-size:1rem;
+    line-height:1.25;
+  }
+
+  .dashboard-card-heading>span{
+    font-size:.62rem;
+  }
+
+  .native-chart{
+    height:100%;
+  }
+
+  .native-income-svg{
+    height:270px;
+  }
+
+  .native-donut{
+    height:230px;
+  }
+
+  .native-chart-legend{
+    justify-content:center;
+    gap:7px 14px;
+    font-size:.68rem;
+  }
+
+  .native-donut-legend{
+    grid-template-columns:1fr 1fr;
+    max-height:116px;
+    font-size:.66rem;
+  }
+
+  .native-bar-chart{
+    min-height:0;
+  }
+}
+
+@media(max-width:380px){
+  .chart-wrap-main{height:265px;}
+  .chart-wrap-category{height:265px;}
+  .native-income-svg{height:255px;}
+  .native-donut{height:215px;}
+  .native-donut-legend{grid-template-columns:1fr;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .native-chart *,
+  .native-donut *,
+  .native-income-svg *,
+  .native-bar-chart *{
+    transition:none !important;
+    animation:none !important;
+  }
+}
