@@ -13,6 +13,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
+from google import genai
 
 from .database import db
 from .models import User, Expense, Income, Investment
@@ -1121,42 +1122,37 @@ def market_snapshot(symbols=None):
     return result
 
 
-def ollama_chat(prompt, model=None):
-    model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
-    payload = json.dumps({
-        "model": model,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Je bent FINTRACK AI, een Nederlandstalige financiële "
-                    "onderzoeksassistent. Gebruik actuele marktdata en nieuws "
-                    "als primaire context. Geef geen gegarandeerde rendementen "
-                    "en presenteer geen koop/verkoopbeslissing als zekerheid. "
-                    "Maak duidelijk onderscheid tussen feiten, interpretatie "
-                    "en onzekerheid. Geef bij financiële vragen altijd risico's, "
-                    "aannames en relevante Belgische aandachtspunten. "
-                    "Verzin geen actuele cijfers die niet in de aangeleverde data staan."
-                )
-            },
-            {"role": "user", "content": prompt}
-        ],
-        "stream": False,
-        "options": {"temperature": 0.2, "num_ctx": 2048, "num_predict": 400},
-        "keep_alive": "10m"
-    }).encode("utf-8")
+def gemini_chat(prompt, model=None):
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is niet ingesteld.")
 
-    req = urllib.request.Request(
-        "http://127.0.0.1:11434/api/chat",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST"
+    model = model or os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config={
+            "system_instruction": (
+                "Je bent FINTRACK AI, een Nederlandstalige financiële "
+                "onderzoeksassistent. Gebruik uitsluitend de aangeleverde actuele "
+                "marktdata en nieuws als feitelijke actuele context. Verzin geen "
+                "prijzen, rendementen, nieuwsfeiten of cijfers. Geef geen "
+                "gegarandeerde rendementen en presenteer geen koop- of "
+                "verkoopbeslissing als zekerheid. Maak duidelijk onderscheid "
+                "tussen feiten, interpretatie, scenario's en onzekerheid. "
+                "Bespreek relevante risico's en Belgische aandachtspunten. "
+                "Als de aangeleverde informatie onvoldoende is, zeg dat expliciet. "
+                "Antwoord helder in het Nederlands met korte kopjes en bullets "
+                "waar dat de leesbaarheid verbetert."
+            ),
+            "temperature": 0.2,
+            "max_output_tokens": 900,
+        },
     )
 
-    with urllib.request.urlopen(req, timeout=600) as response:
-        result = json.loads(response.read())
-
-    return (result.get("message") or {}).get("content", "").strip()
+    return (getattr(response, "text", None) or "").strip()
 
 
 @app.route("/investing")
@@ -1292,7 +1288,7 @@ def ai_investor():
             )
 
             try:
-                answer = ollama_chat(prompt)
+                answer = gemini_chat(prompt)
                 if not answer:
                     flash("De lokale AI gaf geen antwoord terug.", "error")
             except urllib.error.URLError:
