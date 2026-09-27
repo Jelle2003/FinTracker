@@ -146,6 +146,18 @@ with app.app_context():
                 "ALTER TABLE user ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0"
             )
 
+        user_profile_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(user)")
+        }
+        if "display_name" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN display_name VARCHAR(80)")
+        if "email" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN email VARCHAR(254)")
+        if "currency" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'EUR'")
+        if "avatar_color" not in user_profile_columns:
+            connection.exec_driver_sql("ALTER TABLE user ADD COLUMN avatar_color VARCHAR(20) NOT NULL DEFAULT 'blue'")
+
         first_user = connection.exec_driver_sql(
             "SELECT id FROM user ORDER BY id LIMIT 1"
         ).fetchone()
@@ -310,40 +322,77 @@ def register():
 @login_required
 @limiter.limit("5 per minute", methods=["POST"])
 def account():
+    user = db.session.get(User, current_user.id)
+
     if request.method == "POST":
-        current_password = request.form.get("current_password") or ""
-        new_password = request.form.get("new_password") or ""
-        confirm_password = request.form.get("confirm_password") or ""
+        action = request.form.get("action", "profile")
 
-        if not current_user.check_password(current_password):
-            flash("Je huidige wachtwoord is niet correct.", "error")
-            return render_template("account.html")
+        if action == "profile":
+            display_name = (request.form.get("display_name") or "").strip()
+            email = (request.form.get("email") or "").strip().lower()
+            currency = (request.form.get("currency") or "EUR").upper()
+            avatar_color = (request.form.get("avatar_color") or "blue").lower()
 
-        if len(new_password) < 12 or len(new_password) > 128:
-            flash("Gebruik een nieuw wachtwoord van 12 tot 128 tekens.", "error")
-            return render_template("account.html")
+            if len(display_name) > 80:
+                flash("Je weergavenaam mag maximaal 80 tekens bevatten.", "error")
+                return render_template("account.html", user=user)
 
-        if new_password != confirm_password:
-            flash("De nieuwe wachtwoorden komen niet overeen.", "error")
-            return render_template("account.html")
+            if len(email) > 254 or (email and ("@" not in email or "." not in email.rsplit("@", 1)[-1])):
+                flash("Vul een geldig e-mailadres in of laat het veld leeg.", "error")
+                return render_template("account.html", user=user)
 
-        if new_password == current_password:
-            flash("Kies een nieuw wachtwoord dat verschilt van je huidige wachtwoord.", "error")
-            return render_template("account.html")
+            if currency not in {"EUR", "USD", "GBP"}:
+                flash("Ongeldige valuta.", "error")
+                return render_template("account.html", user=user)
 
-        user = db.session.get(User, current_user.id)
-        user.set_password(new_password)
-        db.session.commit()
+            if avatar_color not in {"blue", "purple", "green", "orange", "pink"}:
+                flash("Ongeldige profielkleur.", "error")
+                return render_template("account.html", user=user)
 
-        # Rotate the authenticated session after a credential change.
-        logout_user()
-        session.clear()
-        login_user(user)
+            user.display_name = display_name or None
+            user.email = email or None
+            user.currency = currency
+            user.avatar_color = avatar_color
+            db.session.commit()
+            flash("Je profiel is bijgewerkt.", "success")
+            return redirect(url_for("account"))
 
-        flash("Je wachtwoord is succesvol gewijzigd.", "success")
+        if action == "password":
+            current_password = request.form.get("current_password") or ""
+            new_password = request.form.get("new_password") or ""
+            confirm_password = request.form.get("confirm_password") or ""
+
+            if not user.check_password(current_password):
+                flash("Je huidige wachtwoord is niet correct.", "error")
+                return render_template("account.html", user=user)
+
+            if len(new_password) < 12 or len(new_password) > 128:
+                flash("Gebruik een nieuw wachtwoord van 12 tot 128 tekens.", "error")
+                return render_template("account.html", user=user)
+
+            if new_password != confirm_password:
+                flash("De nieuwe wachtwoorden komen niet overeen.", "error")
+                return render_template("account.html", user=user)
+
+            if new_password == current_password:
+                flash("Kies een nieuw wachtwoord dat verschilt van je huidige wachtwoord.", "error")
+                return render_template("account.html", user=user)
+
+            user.set_password(new_password)
+            db.session.commit()
+
+            # Rotate the authenticated session after a credential change.
+            logout_user()
+            session.clear()
+            login_user(user)
+
+            flash("Je wachtwoord is succesvol gewijzigd.", "success")
+            return redirect(url_for("account"))
+
+        flash("Ongeldige accountactie.", "error")
         return redirect(url_for("account"))
 
-    return render_template("account.html")
+    return render_template("account.html", user=user)
 
 
 def admin_required(view):
